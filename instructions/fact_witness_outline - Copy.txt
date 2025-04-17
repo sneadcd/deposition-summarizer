@@ -1,0 +1,82 @@
+--- START FACT WITNESS OUTLINE & INSTRUCTIONS ---
+
+**Your Task: Final Deposition Summary Synthesis**
+
+You are tasked with synthesizing a final, cohesive deposition summary for a FACT WITNESS (non-party, non-expert) based on a series of detailed segment summaries provided as input.
+
+**Immutable Directives:** Your execution of this task must strictly adhere to the following principles without deviation. Failure to comply precisely will negate the utility of the output.
+
+**Core Principles:**
+
+1.  **Input = Segment Summaries ONLY:** Your **only** source of information is the provided collection of detailed segment summaries. Assume these summaries accurately reflect their respective transcript segments per their own instructions. **DO NOT refer back to original transcript text (even if available). Synthesize *only* from the summaries provided.**
+
+2.  **Synthesize = Organize, Integrate, Deduplicate Identical Facts:** Your primary goal is to **organize and integrate** the information from the *segment summaries* into a single, flowing narrative structured by the specific outline below. This involves combining related information from different segments under the correct headings.
+
+3.  **No Further Summarization or Shortening:** Your goal is **NOT** to shorten the content further. The final summary must be **as detailed** as the combined substance of the input segment summaries, merely organized logically and without *verbatim, identical* repetitions. **Comprehensiveness overrides conciseness.**
+
+4.  **Mandatory Outline Adherence:** Structure the **entire** final output strictly according to the subject-matter topics and exact headings provided in the 'FACT WITNESS DEPOSITION OUTLINE' below. Start the output **directly** with the first specified heading (e.g., "I. Personal Information:"). **DO NOT** include **ANY** introductory text, concluding remarks, or text not fitting under an outline heading.
+
+5.  **Deduplication Rule: Identical Redundancy ONLY:**
+    * Carefully review information across all input segment summaries. If the **exact same factual point, detail, figure, or statement** is present in multiple summaries in *identical or near-identical phrasing*, state it clearly and comprehensively **once** in the most appropriate outline section.
+    * **CRITICAL DISTINCTION:** **DO NOT** omit details simply because they relate to a topic mentioned elsewhere if the details differ even slightly. If a topic (e.g., a specific event, a conversation, an injury) is discussed in multiple segments with varying details, nuances, context, phrasing, or perspectives, you **MUST synthesize and integrate ALL unique details** from each mention into the appropriate outline section. **Do not discard slightly different accounts as redundant.** Preserve all unique substantive information.
+    * **When in doubt whether information is truly identical or adds nuance/detail, ERR ON THE SIDE OF INCLUSION.**
+
+6.  **Retain ALL Substantive Detail (Highest Priority):** Preserve the exhaustive detail captured in the input segment summaries. Only omit information if it meets the strict criteria for *verbatim, identical* redundancy (Principle 5). The final output **MUST** be comprehensive and reflect the full substance reported in the input summaries.
+
+7.  **Absolute Objectivity & Neutrality:** Maintain and enforce an excruciatingly objective stance. Report only the factual substance as presented *in the segment summaries*.
+    * **ZERO** opinions, interpretations, analyses, judgments, assumptions, inferences, characterizations, or subjective evaluations are permitted regarding the testimony content.
+    * **DO NOT** use adverbs or adjectives that imply judgment or interpretation (e.g., avoid words like "clearly," "obviously," "surprisingly," "reluctantly," "understandably," "failed to," "admitted," "claimed," "denied"). State facts directly as reported in the segments.
+    * Report *what* was stated in the segment summaries, not *how* or *why*.
+
+8.  **Strict Source Fidelity (Segment Summaries Only):** Ensure **ALL** information in the final summary originates **solely** from the provided segment summaries. **DO NOT** introduce **ANY** outside information, context, assumptions, or connections not explicitly present in the input summaries.
+
+9.  **Formatting Constraint: Plain Paragraph Text Only:** Use standard paragraph text. **ABSOLUTELY NO** bullet points, numbered lists, bolding, italics, underlining, or other special formatting within the summary text itself (only the main outline headings are permitted as specified).
+
+10. **Flow and Cohesion (Objective Transitions Only):** Ensure the final summary flows logically within each section. Use transition words or phrases **only** when essential for clarity and ensure they remain strictly objective and neutral (e.g., "Subsequently," "Regarding X," "Witness also stated,"). Avoid transitions implying causation or judgment.
+
+11. **Name Handling (Consistent Across Final Summary):** Apply rigorously across the *entire* synthesized output:
+    * Individual First Appearance (anywhere in final summary): Use full name (First Name Last Name).
+    * Individual Subsequent Appearances: Use **Last Name ONLY**.
+    * Company First Appearance (anywhere in final summary): Use full name.
+    * Company Subsequent Appearances: Use a consistent, clearly identifiable shortened name.
+
+12. **Final Internal Check Mandate:** Before concluding generation, perform a final internal review comparing your generated final summary against the input segment summaries. **Verify:** Have you accidentally omitted any substantive facts, figures, dates, specific accounts, or nuances present in the segments that were not *verbatim identically* redundant? Does the final summary accurately reflect the **full detail** provided across all input summaries? Adjust if necessary to ensure completeness according to these instructions.
+
+
+**FACT WITNESS DEPOSITION OUTLINE:**
+
+I.  **Witness Identification and Background:**
+    *   Full name of the witness.
+    *   Residential address and/or employment information (if stated and relevant to their knowledge/observations).
+    *   Stated relationship to the Plaintiff, Defendant, or the events in question (e.g., coworker, neighbor, bystander, family member).
+    *   Brief personal background only if directly relevant to their testimony or potential biases (as stated).
+
+II. **Basis of Knowledge:**
+    *   How the witness came to have knowledge of the events or facts discussed.
+    *   Description of where the witness was and what they were doing at the time of key events they observed.
+    *   Statements regarding their ability to perceive the events (e.g., visibility, hearing, distance, attention level).
+
+III. **Observations and Knowledge of Events:**
+    *   Detailed account of the specific events, actions, or conditions the witness personally observed or experienced related to the case. Organize chronologically if possible based on testimony.
+    *   Include precise details stated by the witness: dates, times, locations, sequence of events, descriptions of people/places/objects involved.
+    *   Include descriptions of statements the witness personally heard relevant parties make (attribute statements accurately).
+    *   Include descriptions of actions the witness personally observed relevant parties take.
+
+IV. **Knowledge of Parties/Circumstances:**
+    *   Witness's testimony regarding their knowledge of the Plaintiff's or Defendant's condition, actions, or statements *before* or *after* the specific incident (if applicable and based on personal knowledge).
+    *   Witness's testimony regarding relevant circumstances, customs, or conditions they personally observed or have knowledge of.
+
+V.  **Communications and Documents:**
+    *   Testimony regarding any relevant communications (oral or written) the witness participated in or personally observed.
+    *   Mention of any documents, photographs, or other tangible items the witness identified, created, received, or has personal knowledge of. Include exhibit numbers/letters if stated.
+
+VI. **Specific Testimony Points:**
+    *   Key factual statements made by the witness that appear particularly relevant to the claims or defenses.
+    *   Testimony that potentially corroborates or contradicts the accounts of the Plaintiff or Defendant.
+    *   Clarifications or corrections made by the witness during their testimony.
+
+VII. **Potential Biases or Influences:**
+    *   Statements made by the witness regarding their relationship with the parties that might suggest bias (e.g., friendship, familial ties, employment relationship, financial interest).
+    *   Testimony regarding discussions the witness had with parties or attorneys prior to the deposition (if discussed).
+
+--- END FACT WITNESS OUTLINE & INSTRUCTIONS ---

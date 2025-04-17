@@ -1,0 +1,92 @@
+--- START EXPERT WITNESS OUTLINE & INSTRUCTIONS ---
+
+**Your Task: Final Deposition Summary Synthesis**
+
+You are tasked with synthesizing a final, cohesive deposition summary for an EXPERT WITNESS based on a series of detailed segment summaries provided as input.
+
+**Immutable Directives:** Your execution of this task must strictly adhere to the following principles without deviation. Failure to comply precisely will negate the utility of the output.
+
+**Core Principles:**
+
+1.  **Input = Segment Summaries ONLY:** Your **only** source of information is the provided collection of detailed segment summaries. Assume these summaries accurately reflect their respective transcript segments per their own instructions. **DO NOT refer back to original transcript text (even if available). Synthesize *only* from the summaries provided.**
+
+2.  **Synthesize = Organize, Integrate, Deduplicate Identical Facts:** Your primary goal is to **organize and integrate** the information from the *segment summaries* into a single, flowing narrative structured by the specific outline below. This involves combining related information from different segments under the correct headings.
+
+3.  **No Further Summarization or Shortening:** Your goal is **NOT** to shorten the content further. The final summary must be **as detailed** as the combined substance of the input segment summaries, merely organized logically and without *verbatim, identical* repetitions. **Comprehensiveness overrides conciseness.**
+
+4.  **Mandatory Outline Adherence:** Structure the **entire** final output strictly according to the subject-matter topics and exact headings provided in the 'EXPERT WITNESS DEPOSITION OUTLINE' below. Start the output **directly** with the first specified heading (e.g., "I. Personal Information:"). **DO NOT** include **ANY** introductory text, concluding remarks, or text not fitting under an outline heading.
+
+5.  **Deduplication Rule: Identical Redundancy ONLY:**
+    * Carefully review information across all input segment summaries. If the **exact same factual point, detail, figure, or statement** is present in multiple summaries in *identical or near-identical phrasing*, state it clearly and comprehensively **once** in the most appropriate outline section.
+    * **CRITICAL DISTINCTION:** **DO NOT** omit details simply because they relate to a topic mentioned elsewhere if the details differ even slightly. If a topic (e.g., a specific event, a conversation, an injury) is discussed in multiple segments with varying details, nuances, context, phrasing, or perspectives, you **MUST synthesize and integrate ALL unique details** from each mention into the appropriate outline section. **Do not discard slightly different accounts as redundant.** Preserve all unique substantive information.
+    * **When in doubt whether information is truly identical or adds nuance/detail, ERR ON THE SIDE OF INCLUSION.**
+
+6.  **Retain ALL Substantive Detail (Highest Priority):** Preserve the exhaustive detail captured in the input segment summaries. Only omit information if it meets the strict criteria for *verbatim, identical* redundancy (Principle 5). The final output **MUST** be comprehensive and reflect the full substance reported in the input summaries.
+
+7.  **Absolute Objectivity & Neutrality:** Maintain and enforce an excruciatingly objective stance. Report only the factual substance as presented *in the segment summaries*.
+    * **ZERO** opinions, interpretations, analyses, judgments, assumptions, inferences, characterizations, or subjective evaluations are permitted regarding the testimony content.
+    * **DO NOT** use adverbs or adjectives that imply judgment or interpretation (e.g., avoid words like "clearly," "obviously," "surprisingly," "reluctantly," "understandably," "failed to," "admitted," "claimed," "denied"). State facts directly as reported in the segments.
+    * Report *what* was stated in the segment summaries, not *how* or *why*.
+
+8.  **Strict Source Fidelity (Segment Summaries Only):** Ensure **ALL** information in the final summary originates **solely** from the provided segment summaries. **DO NOT** introduce **ANY** outside information, context, assumptions, or connections not explicitly present in the input summaries.
+
+9.  **Formatting Constraint: Plain Paragraph Text Only:** Use standard paragraph text. **ABSOLUTELY NO** bullet points, numbered lists, bolding, italics, underlining, or other special formatting within the summary text itself (only the main outline headings are permitted as specified).
+
+10. **Flow and Cohesion (Objective Transitions Only):** Ensure the final summary flows logically within each section. Use transition words or phrases **only** when essential for clarity and ensure they remain strictly objective and neutral (e.g., "Subsequently," "Regarding X," "Witness also stated,"). Avoid transitions implying causation or judgment.
+
+11. **Name Handling (Consistent Across Final Summary):** Apply rigorously across the *entire* synthesized output:
+    * Individual First Appearance (anywhere in final summary): Use full name (First Name Last Name).
+    * Individual Subsequent Appearances: Use **Last Name ONLY**.
+    * Company First Appearance (anywhere in final summary): Use full name.
+    * Company Subsequent Appearances: Use a consistent, clearly identifiable shortened name.
+
+12. **Final Internal Check Mandate:** Before concluding generation, perform a final internal review comparing your generated final summary against the input segment summaries. **Verify:** Have you accidentally omitted any substantive facts, figures, dates, specific accounts, or nuances present in the segments that were not *verbatim identically* redundant? Does the final summary accurately reflect the **full detail** provided across all input summaries? Adjust if necessary to ensure completeness according to these instructions.
+
+
+**EXPERT WITNESS DEPOSITION OUTLINE:**
+
+I.  **Expert Qualifications and Background:**
+    *   Full name and professional title of the expert.
+    *   Area(s) of expertise as stated by the witness.
+    *   Detailed educational background (degrees, institutions, dates if stated).
+    *   Detailed professional experience (positions held, organizations, duration, relevant duties).
+    *   Licenses, certifications, awards, honors mentioned.
+    *   Publications, presentations, teaching experience mentioned.
+    *   Professional society memberships mentioned.
+    *   Percentage of work performed for plaintiffs vs. defendants (if stated). Prior testimony experience (number of times, jurisdictions if stated).
+
+II. **Retention and Scope of Engagement:**
+    *   Party who retained the expert (Plaintiff or Defendant).
+    *   Date of retention (if stated).
+    *   Specific assignment or questions the expert was asked to address (scope of work).
+    *   Compensation arrangements (hourly rate, total fees paid/billed if stated).
+
+III. **Materials Reviewed and Information Relied Upon:**
+    *   Detailed list of documents, records, photographs, depositions, physical evidence, or other materials reviewed by the expert in forming their opinions (as stated).
+    *   Mention of specific individuals consulted or interviewed (if any).
+    *   Description of any site inspections or physical examinations conducted.
+    *   Identification of key facts or data considered most significant by the expert.
+
+IV. **Methodology and Principles:**
+    *   Description of the specific methods, techniques, or principles employed by the expert to reach their conclusions.
+    *   Reference to any industry standards, scientific principles, or recognized treatises relied upon.
+    *   Explanation of any tests, experiments, or analyses performed.
+    *   Statements regarding whether the methodology is generally accepted in their field.
+
+V.  **Expert Opinions and Conclusions:**
+    *   Clear statement of each distinct opinion or conclusion offered by the expert during the testimony.
+    *   Expression of the level of certainty for each opinion (e.g., "reasonable degree of scientific certainty," "more likely than not," as stated).
+    *   Detailed explanation of the basis and reasoning for each opinion, linking back to the materials reviewed and methodology used.
+    *   Any alternative scenarios or possibilities considered and rejected (if discussed).
+
+VI. **Responses to Challenges / Cross-Examination Points:**
+    *   Expert's responses to questions regarding potential biases.
+    *   Expert's responses to questions challenging their qualifications, methodology, or the basis for their opinions.
+    *   Acknowledgement of any limitations to their analysis or opinions.
+    *   Discussion of areas of agreement or disagreement with other potential experts (if discussed).
+
+VII. **Concluding Details:**
+    *   Summary of the expert's main overarching conclusions.
+    *   Mention of any planned follow-up work or pending information that might affect their opinions (if stated).
+
+--- END EXPERT WITNESS OUTLINE & INSTRUCTIONS ---

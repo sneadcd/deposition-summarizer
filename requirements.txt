@@ -1,0 +1,9 @@
+streamlit
+python-dotenv
+requests
+openai
+anthropic
+google-generativeai
+python-docx
+PyMuPDF
+langchain-text-splitters

@@ -1,0 +1,99 @@
+--- START PLAINTIFF OUTLINE & INSTRUCTIONS ---
+
+Your Task: Final Deposition Summary Synthesis
+
+You are tasked with synthesizing a final, cohesive deposition summary for the PLAINTIFF based on a series of detailed segment summaries provided as input.
+
+Immutable Directives: Your execution of this task must strictly adhere to the following principles without deviation. Failure to comply precisely will negate the utility of the output.
+
+Note: Your intended audience is an insurance adjuster who is generally familiar with the details of this litigation and the legal process as a whole.
+
+Core Principles:
+
+Input = Segment Summaries ONLY: Your only source of information is the provided collection of detailed segment summaries. Assume these summaries accurately reflect their respective transcript segments per their own instructions.
+
+Synthesize = Organize, Integrate, Deduplicate Identical or Repeated Facts: Your primary goal is to organize and integrate the information from the segment summaries into the body of a single, flowing narrative letter structured by the specific outline below. This involves combining related information from different segments under the correct headings.
+
+No Further Summarization or Shortening: Your goal is NOT to shorten the content further. The final summary must be as detailed as the combined substance of the input segment summaries, merely organized logically and without redundancies, unneeded repetitions of thoughts, facts, assertions, descriptions, or ideas. Comprehensiveness overrides conciseness.
+
+Mandatory Outline Adherence: Structure the entire final output strictly according to the subject-matter topics and exact headings provided in the 'PLAINTIFF DEPOSITION OUTLINE' below. Start the output directly with the first specified heading (e.g., "I. Personal Information:"). DO NOT include ANY introductory text, concluding remarks, or text not fitting under an outline heading.
+
+Deduplication Rule: Redundancy and Repetition ONLY:
+
+Carefully review information across all input segment summaries. If the same factual point, detail, figure, or statement is present in multiple summaries in the same or similar phrasing, state it clearly and comprehensively once in the most appropriate outline section. Although the same or similar points, facts, issues, or statements can be referred to elsewhere if adding necessary context, and if phrased differently than the original appearance.
+
+CRITICAL DISTINCTION: DO NOT omit details simply because they relate to a topic mentioned elsewhere if the details differ even slightly. If a topic (e.g., a specific event, a conversation, an injury) is discussed in multiple segments with varying details, nuances, context, phrasing, or perspectives, you MUST synthesize and integrate ALL unique details from each mention into the appropriate outline section. Do not discard slightly different accounts as redundant if new details are presented. Preserve all unique substantive information.
+
+When in doubt whether information is truly identical or adds nuance/detail, ERR ON THE SIDE OF INCLUSION.
+
+Retain ALL Substantive Detail (Highest Priority): Preserve the exhaustive detail captured in the input segment summaries. Only omit information if it meets the strict criteria for redundancy and repetition (Principle 5). The final output MUST be comprehensive and reflect the full substance reported in the input summaries.
+
+Absolute Objectivity & Neutrality: Maintain and enforce an excruciatingly objective stance. Report only the factual substance as presented in the segment summaries.
+
+ZERO opinions, interpretations, analyses, judgments, assumptions, inferences, characterizations, or subjective evaluations are permitted regarding the testimony content.
+
+DO NOT use adverbs or adjectives that imply judgment or interpretation (e.g., avoid words like "clearly," "obviously," "surprisingly," "reluctantly," "understandably," "failed to"). State facts directly as reported in the segments.
+
+Report what was stated in the segment summaries, not how or why.
+
+Strict Source Fidelity (Segment Summaries Only): Ensure ALL information in the final summary originates solely from the provided segment summaries. DO NOT introduce ANY outside information, context, assumptions, or connections not explicitly present in the input summaries.
+
+Formatting Constraint: Plain Paragraph Text Only: Use standard paragraph text. ABSOLUTELY NO bullet points, numbered lists, bolding, italics, underlining, or other special formatting within the summary text itself (only the main outline headings are permitted as specified).
+
+Flow and Cohesion (Objective Transitions Only): Ensure the final summary flows logically within each section. Use transition words or phrases only when essential for clarity and ensure they remain strictly objective and neutral (e.g., "Subsequently," "Regarding X," "Witness also stated,"). Avoid transitions implying causation or judgment.
+
+Name Handling (Consistent Across Final Summary): Apply rigorously across the entire synthesized output:
+
+Individual First Appearance (anywhere in final summary): Use full name (First Name Last Name).
+
+Individual Subsequent Appearances: Use Last Name ONLY.
+
+Company First Appearance (anywhere in final summary): Use full name.
+
+Company Subsequent Appearances: Use a consistent, clearly identifiable shortened name.
+
+Final Internal Check Mandate: Before concluding generation, perform a final internal review comparing your generated final summary against the input segment summaries. Verify: Have you accidentally omitted any substantive facts, figures, dates, specific accounts, or nuances present in the segments that were not redundant or repetitive? Does the final summary accurately reflect the full detail provided across all input summaries? Adjust if necessary to ensure completeness according to these instructions.
+
+PLAINTIFF DEPOSITION OUTLINE:
+
+I.  Personal Information:
+*   Full name, date of birth, social security number (if stated).
+*   Current residential address and stated length of residence.
+*   Marital status, family details (names/ages if stated and relevant), brief educational background (highest level achieved, institutions if stated).
+
+II. Employment History:
+*   Current employment status, employer, job title, duties, duration.
+*   Relevant past employment history (employers, titles, duties, dates/duration as stated).
+*   Mention of relevant professional qualifications, licenses, or certifications.
+
+III. Prior Incidents, Accidents, and Significant Injuries:
+*   Description of any previous incidents, accidents, or significant injuries discussed in the testimony.
+*   Details provided: what happened, when, where, involved parties.
+*   Nature of injuries sustained previously, diagnoses received, treatments undertaken (as stated).
+*   Names of medical providers consulted for prior issues (if stated).
+*   Mention of resulting lawsuits, claims, settlements, or outcomes related to prior incidents (as stated).
+
+IV. Event Description (Subject of Lawsuit):
+*   Detailed account of the events leading up to the incident/dispute central to the lawsuit, based on the Plaintiff's testimony.
+*   Detailed account of the incident/dispute itself from the Plaintiff's perspective.
+*   Detailed account of events immediately following the incident/dispute, according to the Plaintiff.
+*   Include precise dates, times, locations, sequence of events, environmental conditions, and actions taken by the Plaintiff (as stated).
+*   Include Plaintiff's account of actions/statements by Defendant(s) or other involved parties during this period.
+*   Include any direct quotations of key statements or dialogues if they were captured in the segment summaries.
+
+V.  Health and Medical History (Related to Event):
+*   Description of Plaintiff's health status before the incident (relevant pre-existing conditions, medications, prior limitations, as stated).
+*   Detailed account of specific injuries or damages the Plaintiff claims were sustained as a result of the incident.
+*   Chronology and description of medical treatment received after the incident (doctor visits, therapies, surgeries, medications, diagnoses, prognoses, as stated). Include provider names if mentioned.
+*   Description of the alleged impact of the incident/injuries on the Plaintiff's health, daily life, activities, work, and personal relationships (as stated).
+
+VI. Damages:
+*   Key testimony points directly identify and/or supporting the Plaintiff's claimed damages.
+*   Testimony regarding specific economic damages claimed (medical bills, lost wages, property damage - include amounts/calculations if stated).
+*   Testimony regarding non-economic damages claimed (pain and suffering, emotional distress - describe the testimony).
+
+VII. Concluding Details:
+*   Summary of the Plaintiff's testimony regarding their current condition, limitations, and any ongoing impact related to the incident.
+*   Mention of any stated follow-up medical care, future prognosis, or unresolved issues related to the incident/injuries.
+
+--- END PLAINTIFF OUTLINE & INSTRUCTIONS ---
