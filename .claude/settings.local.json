@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(python test_enhanced_chunking.py:*)",
+      "Bash(python3:*)",
+      "Bash(rm:*)",
+      "Bash(awk:*)",
+      "Bash(sed:*)",
+      "Bash(cp:*)"
+    ],
+    "deny": []
+  }
+}
