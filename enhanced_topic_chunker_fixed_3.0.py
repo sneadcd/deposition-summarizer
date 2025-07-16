@@ -1,17 +1,13 @@
-# enhanced_topic_chunker_fixed.py
-# Hybrid version combining the best features from both implementations, with fixes applied.
+# enhanced_topic_chunker_improved.py
+# Improved version with performance optimizations, better error handling, and configurable parameters
 
 import re
 import time
 import hashlib
 import streamlit as st
-import logging
-from typing import List, Dict, Callable, Optional, Tuple, Set
+from typing import List, Dict, Callable, Optional, Tuple
 from dataclasses import dataclass, field
 from functools import lru_cache
-
-# Get the logger that's already configured in your app.py
-logger = logging.getLogger(__name__)
 
 @dataclass
 class TopicSegment:
@@ -22,7 +18,7 @@ class TopicSegment:
     text: str
     confidence: float
     method: str = "unknown"
-
+    
     def __post_init__(self):
         """Validate segment data"""
         if self.start_idx < 0 or self.end_idx < self.start_idx:
@@ -37,19 +33,12 @@ class ChunkerConfig:
     min_chunk_size: int = 2000
     max_chunk_size: int = 12000
     overlap_size: int = 400
-    quality_threshold: float = 0.6
+    quality_threshold: float = 0.7
     min_segment_gap: int = 100
     min_text_length: int = 100
     preview_sentence_min_length: int = 20
     emergency_split_threshold: float = 1.5
-    keyword_density_threshold: float = 0.15
-    min_sentences_for_density: int = 5  # New config parameter
-    use_full_text_for_short_docs: bool = True
-    full_text_threshold: int = 100000  # ~100 pages
-    sampling_percentage: float = 0.25  # 25% sampling for longer docs
-    max_sample_size: int = 75000  # Cap sampling at 75k chars
-    custom_keyword_groups: Optional[Dict[str, List[str]]] = None
-
+    
     def __post_init__(self):
         """Validate configuration"""
         if not (self.min_chunk_size <= self.target_chunk_size <= self.max_chunk_size):
@@ -58,127 +47,63 @@ class ChunkerConfig:
             raise ValueError("Overlap size must be less than minimum chunk size")
 
 class EnhancedTopicBasedChunker:
-    """Hybrid topic-based chunking for deposition transcripts with best features from both versions"""
+    """Improved topic-based chunking for deposition transcripts with caching and better error handling"""
 
     def __init__(self,
                  llm_provider: str,
                  llm_model: str,
                  config: Optional[ChunkerConfig] = None,
-                 call_llm_func: Optional[Callable] = None,
+                 call_llm_func: Callable = None,
                  enable_caching: bool = True):
         self.llm_provider = llm_provider
         self.llm_model = llm_model
         self.config = config or ChunkerConfig()
         self.call_llm = call_llm_func
         self.enable_caching = enable_caching
-        self._response_cache: Optional[Dict] = {} if enable_caching else None
+        self._response_cache = {} if enable_caching else None
         self.processing_stats = {
             'llm_calls': 0,
             'cache_hits': 0,
             'fallback_count': 0,
-            'processing_time': 0.0,
+            'processing_time': 0,
             'chunks_created': 0,
             'total_text_length': 0
         }
-
+        
         # Compile regex patterns once for better performance
         self._compiled_patterns = self._compile_deposition_patterns()
-        
-        # Get keyword groups and optimize them for performance
-        keyword_groups = self.config.custom_keyword_groups or self._get_default_keywords()
-        self.keyword_groups = keyword_groups
-        
-        # Pre-convert keywords to lowercase sets for O(1) lookup performance
-        self.keyword_sets: Dict[str, Set[str]] = {
-            topic: set(keyword.lower() for keyword in keywords)
-            for topic, keywords in keyword_groups.items()
-        }
-
-    def _get_default_keywords(self) -> Dict[str, List[str]]:
-        """Default keyword groups for density-based fallback detection"""
-        return {
-            'Personal Information': ['name', 'address', 'birth', 'education', 'family', 'residence', 'age'],
-            'Employment': ['work', 'employer', 'job', 'occupation', 'duties', 'experience', 'career', 'position'],
-            'Medical History': ['medical', 'surgeries', 'health', 'medications', 'injuries', 'conditions', 'doctors', 'treatment'],
-            'Incident Details': ['accident', 'incident', 'happened', 'events', 'occurred', 'collision', 'impact', 'crash'],
-            'Current Condition': ['condition', 'feeling', 'treating', 'pain', 'symptoms', 'recovery', 'limitations', 'disability'],
-            'Post-Incident Events': ['aftermath', 'immediately', 'emergency', 'ambulance', 'hospital'],
-            'Medical Treatment': ['doctor', 'therapy', 'treatment', 'appointment', 'procedure', 'surgery', 'rehabilitation']
-        }
 
     def _compile_deposition_patterns(self) -> Dict[str, List]:
-        """Pre-compile expanded regex patterns for better performance"""
+        """Pre-compile regex patterns for better performance"""
         pattern_dict = {
             'Personal Information': [
                 r'(?:please\s+)?state\s+your\s+(?:full\s+)?name',
                 r'what\s+is\s+your\s+name',
                 r'where\s+do\s+you\s+live',
-                r'(?:current\s+)?address',
-                r'date\s+of\s+birth',
-                r'education\s+background',
-                r'family\s+status',
-                r'marital\s+status',
-                r'social\s+security'
+                r'(?:current\s+)?address'
             ],
             'Employment': [
                 r'where\s+do\s+you\s+work',
                 r'(?:current\s+)?employer',
                 r'what\s+is\s+your\s+(?:job|occupation)',
-                r'employment\s+history',
-                r'job\s+duties',
-                r'work\s+experience',
-                r'professional\s+background',
-                r'how\s+long\s+have\s+you\s+worked',
-                r'describe\s+your\s+position'
+                r'employment\s+history'
             ],
             'Medical History': [
                 r'medical\s+history',
                 r'(?:any\s+)?(?:prior\s+)?surgeries',
                 r'health\s+conditions',
-                r'medications',
-                r'previous\s+injuries',
-                r'chronic\s+conditions',
-                r'healthcare\s+providers',
-                r'pre-existing\s+conditions',
-                r'allergies'
+                r'medications'
             ],
             'Incident Details': [
                 r'(?:day|date)\s+of\s+the\s+(?:accident|incident)',
                 r'tell\s+us\s+what\s+happened',
-                r'describe\s+the\s+(?:accident|incident)',
-                r'events\s+leading\s+up',
-                r'what\s+occurred',
-                r'circumstances\s+of',
-                r'how\s+did\s+the\s+accident',
-                r'where\s+did\s+(?:it|the\s+accident)\s+happen'
+                r'describe\s+the\s+(?:accident|incident)'
             ],
             'Current Condition': [
                 r'current\s+condition',
                 r'how\s+are\s+you\s+feeling',
                 r'(?:still\s+)?treating',
-                r'pain\s+level',
-                r'ongoing\s+symptoms',
-                r'recovery\s+status',
-                r'limitations\s+due\s+to',
-                r'daily\s+activities',
-                r'quality\s+of\s+life'
-            ],
-            'Post-Incident Events': [
-                r'immediate\s+aftermath',
-                r'what\s+happened\s+(?:next|after)',
-                r'after\s+the\s+incident',
-                r'emergency\s+room',
-                r'ambulance',
-                r'police\s+report'
-            ],
-            'Medical Treatment': [
-                r'doctors\s+(?:visited|seen)',
-                r'procedures\s+undergone',
-                r'therapy\s+sessions',
-                r'medical\s+treatment',
-                r'surgeries\s+performed',
-                r'physical\s+therapy',
-                r'chiropractor'
+                r'pain\s+level'
             ]
         }
         
@@ -195,7 +120,7 @@ class EnhancedTopicBasedChunker:
         return compiled
 
     def chunk_transcript(self, transcript_text: str) -> List[str]:
-        """Main method with improved reliability and clear user feedback"""
+        """Main method with improved reliability and performance"""
         start_time = time.time()
         
         # Enhanced input validation
@@ -211,38 +136,30 @@ class EnhancedTopicBasedChunker:
             return self._simple_chunk(transcript_text)
 
         try:
-            st.info("1. Analyzing transcript for topic segments...")
+            st.info("Analyzing transcript structure...")
             topic_segments = self._multi_method_topic_detection(transcript_text)
-            
+
             if not topic_segments:
                 st.warning("No topic segments detected, using simple chunking")
                 return self._simple_chunk(transcript_text)
-            
-            if topic_segments and topic_segments[0].method:
-                 st.info(f"   ✓ Found {len(topic_segments)} initial segments using '{topic_segments[0].method}' method")
 
             quality_score = self._evaluate_segmentation_quality(topic_segments, text_length)
-            st.info(f"2. Evaluating segmentation quality: {quality_score:.2f}")
+            st.info(f"Segmentation quality score: {quality_score:.2f}")
 
             if quality_score < self.config.quality_threshold:
-                st.info("3. Applying segmentation corrections...")
+                st.warning("Applying segmentation corrections...")
                 topic_segments = self._correct_segments_safe(topic_segments)
-                st.info(f"   ✓ Corrected to {len(topic_segments)} segments")
-            else:
-                st.info("3. Segmentation quality acceptable, skipping corrections")
 
-            st.info("4. Optimizing chunk sizes...")
+            st.info("Optimizing chunk sizes...")
             sized_segments = self._optimize_segment_sizes(topic_segments)
-            st.info(f"   ✓ Optimized to {len(sized_segments)} segments")
 
-            st.info("5. Creating final chunks with contextual overlaps...")
             final_chunks = self._create_final_chunks_enhanced(sized_segments)
             final_chunks = self._validate_final_chunks(final_chunks)
 
             self.processing_stats['processing_time'] = time.time() - start_time
             self.processing_stats['chunks_created'] = len(final_chunks)
 
-            st.success(f"✅ Processing complete! Created {len(final_chunks)} chunks in {self.processing_stats['processing_time']:.1f}s")
+            st.success(f"Created {len(final_chunks)} chunks in {self.processing_stats['processing_time']:.1f}s")
             return final_chunks
 
         except Exception as e:
@@ -260,7 +177,7 @@ class EnhancedTopicBasedChunker:
         cache_key = f"detection_{text_hash}" if text_hash else None
         
         # Check cache first
-        if cache_key and self._response_cache is not None and cache_key in self._response_cache:
+        if cache_key and cache_key in self._response_cache:
             self.processing_stats['cache_hits'] += 1
             return self._response_cache[cache_key]
         
@@ -276,38 +193,23 @@ class EnhancedTopicBasedChunker:
                 st.warning(f"LLM detection failed: {e}")
         
         # Method 2: Pattern-based detection (always available)
-        if not all_segments:
-            try:
-                pattern_segments = self._pattern_based_segmentation_enhanced(text)
-                if pattern_segments and self._validate_segments(pattern_segments):
+        try:
+            pattern_segments = self._pattern_based_segmentation_enhanced(text)
+            if pattern_segments and self._validate_segments(pattern_segments):
+                if not all_segments:
                     all_segments = pattern_segments
-            except Exception as e:
-                st.warning(f"Pattern detection failed: {e}")
+                else:
+                    all_segments = self._merge_detection_results(all_segments, pattern_segments)
+        except Exception as e:
+            st.warning(f"Pattern detection failed: {e}")
         
-        # Method 2.5: Dynamic keyword detection enhancement
-        if not all_segments and self.call_llm:
-            try:
-                st.info("   Attempting dynamic keyword detection...")
-                self._update_keywords_dynamically(text)
-            except Exception as e:
-                st.warning(f"Dynamic keyword detection failed: {e}")
-        
-        # Method 3: Keyword density fallback (now with potentially enhanced keywords)
-        if not all_segments:
-            try:
-                density_segments = self._keyword_density_segmentation(text)
-                if density_segments and self._validate_segments(density_segments):
-                    all_segments = density_segments
-            except Exception as e:
-                st.warning(f"Keyword density fallback failed: {e}")
-        
-        # Final fallback if all methods failed
+        # Fallback if all methods failed
         if not all_segments:
             st.warning("All detection methods failed, using uniform segments")
             all_segments = self._create_uniform_segments(text)
         
         # Cache the result
-        if cache_key and self._response_cache is not None:
+        if cache_key:
             self._response_cache[cache_key] = all_segments
         
         return all_segments
@@ -319,22 +221,20 @@ class EnhancedTopicBasedChunker:
         
         # Check for overlapping segments
         for i in range(len(segments) - 1):
-            if segments[i].end_idx > segments[i + 1].start_idx + 10:
+            if segments[i].end_idx > segments[i + 1].start_idx:
                 st.warning(f"Overlapping segments detected: {i} and {i+1}")
                 return False
         
         # Check coverage
         total_coverage = sum(seg.end_idx - seg.start_idx for seg in segments)
-        text_span = segments[-1].end_idx - segments[0].start_idx if segments else 0
-        coverage_ratio = total_coverage / text_span if text_span > 0 else 0
-        if coverage_ratio < 0.7:
-            st.warning(f"Poor text coverage in segments: {coverage_ratio:.2f}")
+        if total_coverage < 0.8 * (segments[-1].end_idx - segments[0].start_idx):
+            st.warning("Poor text coverage in segments")
             return False
         
         return True
 
     def _identify_topics_llm_optimized(self, text: str) -> List[TopicSegment]:
-        """Optimized LLM-based topic identification with enhanced parsing"""
+        """Optimized LLM-based topic identification with better caching"""
         if not self.call_llm:
             raise Exception("LLM function not available")
         
@@ -343,7 +243,7 @@ class EnhancedTopicBasedChunker:
         llm_cache_key = f"llm_{self.llm_provider}_{self.llm_model}_{text_hash}" if text_hash else None
         
         # Check LLM cache
-        if llm_cache_key and self._response_cache is not None and llm_cache_key in self._response_cache:
+        if llm_cache_key and llm_cache_key in self._response_cache:
             self.processing_stats['cache_hits'] += 1
             response = self._response_cache[llm_cache_key]
         else:
@@ -352,13 +252,6 @@ class EnhancedTopicBasedChunker:
             sample_size = min(15000, text_length)
             
             samples = self._get_strategic_samples(text, sample_size)
-            
-            # Provide user feedback on sampling strategy
-            if len(samples) == 1 and len(samples[0]) == len(text):
-                st.info("   ✓ Using full-text analysis for maximum accuracy")
-            elif len(samples) > 1:
-                total_sampled = sum(len(s) for s in samples)
-                st.info(f"   ✓ Sampling {total_sampled:,} chars across {len(samples)} segments ({(total_sampled/len(text))*100:.1f}% coverage)")
             
             # Improved prompt with better structure
             prompt = self._create_llm_prompt(samples)
@@ -370,57 +263,32 @@ class EnhancedTopicBasedChunker:
                 raise Exception(f"LLM call failed: {response}")
             
             # Cache the response
-            if llm_cache_key and self._response_cache is not None:
+            if llm_cache_key:
                 self._response_cache[llm_cache_key] = response
         
         return self._parse_llm_response_enhanced(response, text)
 
     def _get_strategic_samples(self, text: str, sample_size: int) -> List[str]:
-        """Enhanced strategic sampling with full-text for short docs and 25% sampling for longer"""
+        """Get strategic samples from text for LLM analysis"""
         text_length = len(text)
         
-        # Return full text for documents under ~100 pages
-        if (self.config.use_full_text_for_short_docs and 
-            text_length <= self.config.full_text_threshold):
-            logger.info(f"Using full-text analysis for document ({text_length:,} chars, ~{text_length//1000} pages)")
+        if text_length <= sample_size:
             return [text]
         
-        # For longer documents, sample 25% of content
-        if text_length > self.config.full_text_threshold:
-            # Calculate 25% of document or max sample size, whichever is smaller
-            target_sample_size = min(
-                int(text_length * self.config.sampling_percentage),
-                self.config.max_sample_size
-            )
-            logger.info(f"Large document detected ({text_length:,} chars, ~{text_length//1000} pages)")
-            logger.info(f"Sampling {target_sample_size:,} chars ({(target_sample_size/text_length)*100:.1f}% of content)")
-            
-            # Determine number of samples based on document size
-            if text_length < 150000:  # 100-150 pages
-                num_samples = 5
-            elif text_length < 250000:  # 150-250 pages  
-                num_samples = 7
-            else:  # 250+ pages
-                num_samples = 10
-            
-            sample_per = target_sample_size // num_samples
-            samples = []
-            
-            # Evenly distribute samples across document
-            for i in range(num_samples):
-                start = int(i * text_length / num_samples)
-                end = min(start + sample_per, text_length)
-                samples.append(text[start:end])
-            
-            return samples
+        # Get samples from beginning, middle, and end
+        third = sample_size // 3
+        samples = [
+            text[:third],
+            text[text_length//2 - third//2:text_length//2 + third//2],
+            text[-third:]
+        ]
         
-        # Fallback for edge cases (shouldn't normally reach here)
-        return [text] if text_length <= sample_size else [text[:sample_size]]
+        return samples
 
     def _create_llm_prompt(self, samples: List[str]) -> str:
         """Create structured prompt for LLM"""
         return f"""
-Analyze this deposition transcript and identify topic transitions with high precision. Focus on clear shifts in discussion.
+Analyze this deposition transcript and identify topic transitions with high precision.
 
 COMMON DEPOSITION TOPICS:
 1. Personal Information (name, address, background)
@@ -432,23 +300,21 @@ COMMON DEPOSITION TOPICS:
 7. Current Condition (ongoing symptoms, limitations)
 
 REQUIREMENTS:
-- Identify 3-10 key transitions in sequential order from the text
-- Use exact, unique phrases (5-20 words) from the text as markers for transitions
-- Provide confidence based on how abrupt the shift is (e.g., new question starting a topic)
-- Output ONLY in this exact format, one per line, no extra text
+- Identify clear topic transitions with unique text markers
+- Provide confidence scores based on clarity of transition
+- Use exact phrases from the text as markers
 
-EXAMPLE OUTPUT:
-TOPIC: Personal Information | MARKER: State your full name for the record | CONFIDENCE: 0.95
-TOPIC: Employment History | MARKER: Tell me about your current job duties | CONFIDENCE: 0.85
+FORMAT (one per line):
+TOPIC: [exact topic name] | MARKER: [unique phrase from text] | CONFIDENCE: [0.0-1.0]
 
 TRANSCRIPT SAMPLES:
 {' [...NEXT SAMPLE...] '.join(samples)}
 """
 
     def _parse_llm_response_enhanced(self, response: str, full_text: str) -> List[TopicSegment]:
-        """Enhanced parsing with fallback mechanisms"""
+        """Enhanced parsing with better validation"""
         segments = []
-        lines = [line.strip() for line in response.split('\n') if line.strip()]
+        lines = response.split('\n')
         markers = []
         
         # Extract and validate markers
@@ -459,112 +325,15 @@ TRANSCRIPT SAMPLES:
                     if marker_data and self._validate_marker(marker_data, full_text):
                         markers.append(marker_data)
                 except Exception as e:
-                    logger.debug(f"Failed to parse line {line_num}: {line} - {e}")
-                    continue
-        
-        # Fallback to regex-based parsing if structured parsing fails
-        if not markers:
-            st.info("   Attempting fallback regex parsing...")
-            topic_matches = re.findall(
-                r'TOPIC:\s*(.+?)\s*\|\s*MARKER:\s*(.+?)\s*\|\s*CONFIDENCE:\s*(\d?\.\d+)', 
-                response
-            )
-            for topic, marker, conf_str in topic_matches:
-                try:
-                    conf = float(conf_str)
-                    marker_data = {
-                        'topic': topic.strip(), 
-                        'marker': marker.strip(), 
-                        'confidence': max(0.0, min(1.0, conf))
-                    }
-                    if self._validate_marker(marker_data, full_text):
-                        markers.append(marker_data)
-                except ValueError:
+                    st.debug(f"Failed to parse line {line_num}: {line} - {e}")
                     continue
         
         if not markers:
             st.warning("No valid markers found in LLM response")
             return []
         
-        # Sort markers by position in text to ensure order
-        markers_with_pos = []
-        for m in markers:
-            pos = self._find_marker_position(full_text, m['marker'], 0)
-            if pos != -1:
-                markers_with_pos.append((pos, m))
-        
-        markers_with_pos.sort(key=lambda x: x[0])
-        sorted_markers = [m for pos, m in markers_with_pos]
-        
         # Create segments with improved positioning
-        return self._create_segments_from_markers(sorted_markers, full_text)
-
-    def _update_keywords_dynamically(self, text: str):
-        """Update keyword sets based on dynamic analysis of the text with caching"""
-        # Check cache first
-        text_hash = self._get_text_hash(text) if self.enable_caching else None
-        keyword_cache_key = f"keywords_{text_hash}" if text_hash else None
-        
-        if keyword_cache_key and self._response_cache is not None and keyword_cache_key in self._response_cache:
-            self.processing_stats['cache_hits'] += 1
-            cached_keywords = self._response_cache[keyword_cache_key]
-            self._apply_cached_keywords(cached_keywords)
-            return
-        
-        # Get strategic samples from the text
-        samples = self._get_strategic_samples(text, 15000)
-        
-        keyword_prompt = f"""Extract 5-8 main topics from this deposition transcript samples, and for each topic list 3-5 associated keywords.
-Format: TOPIC: keywords, separated, by, commas
-Example: Employment History: job, position, duties, salary, employer
-
-TRANSCRIPT SAMPLES:
-{' [...] '.join(samples)}"""
-        
-        response = self.call_llm(keyword_prompt, self.llm_provider, self.llm_model)
-        
-        if response.startswith("Error:"):
-            raise Exception(f"Dynamic keyword extraction failed: {response}")
-        
-        # Parse response and extract dynamic keywords
-        dynamic_keywords = {}
-        for line in response.split('\n'):
-            if ':' in line and not line.strip().startswith('#'):
-                try:
-                    topic, kws = line.split(':', 1)
-                    topic = topic.strip()
-                    keywords = [kw.strip() for kw in kws.split(',') if kw.strip()]
-                    if topic and keywords:
-                        dynamic_keywords[topic] = keywords
-                except:
-                    continue
-        
-        # Cache the extracted keywords
-        if keyword_cache_key and self._response_cache is not None:
-            self._response_cache[keyword_cache_key] = dynamic_keywords
-        
-        # Apply the keywords to the current instance
-        self._apply_cached_keywords(dynamic_keywords)
-    
-    def _apply_cached_keywords(self, dynamic_keywords: Dict[str, List[str]]):
-        """Apply dynamic keywords from cache or fresh extraction"""
-        keywords_added = 0
-        for topic, keywords in dynamic_keywords.items():
-            # Create new keyword set or update existing one
-            keyword_set = set(kw.lower() for kw in keywords)
-            if topic in self.keyword_sets:
-                # Merge with existing keywords
-                original_size = len(self.keyword_sets[topic])
-                self.keyword_sets[topic].update(keyword_set)
-                keywords_added += len(self.keyword_sets[topic]) - original_size
-            else:
-                # Create new topic
-                self.keyword_sets[topic] = keyword_set
-                self.keyword_groups[topic] = keywords
-                keywords_added += len(keyword_set)
-        
-        if keywords_added > 0:
-            st.info(f"   ✓ Added {keywords_added} dynamic keywords across {len(dynamic_keywords)} topics")
+        return self._create_segments_from_markers(markers, full_text)
 
     def _parse_marker_line(self, line: str) -> Optional[Dict]:
         """Parse a single marker line from LLM response"""
@@ -590,9 +359,9 @@ TRANSCRIPT SAMPLES:
         return marker_data if marker_data['topic'] and marker_data['marker'] else None
 
     def _validate_marker(self, marker_data: Dict, text: str) -> bool:
-        """Enhanced marker validation"""
+        """Validate that marker exists in text and is reasonable"""
         marker = marker_data['marker']
-        if len(marker) < 5 or len(marker) > 200:
+        if len(marker) < 5 or len(marker) > 200:  # Reasonable marker length
             return False
         
         # Check if marker exists in text (fuzzy)
@@ -607,28 +376,6 @@ TRANSCRIPT SAMPLES:
                 return False
         
         return True
-
-    def _find_marker_position(self, text: str, marker: str, start_pos: int = 0) -> int:
-        """Find marker position with fuzzy matching"""
-        # Try exact match first
-        pos = text.find(marker, start_pos)
-        if pos != -1:
-            return pos
-        
-        # Try case-insensitive
-        pos = text.lower().find(marker.lower(), start_pos)
-        if pos != -1:
-            return pos
-        
-        # Try progressive word matching
-        words = marker.split()
-        for num_words in range(len(words), max(1, len(words)//2), -1):
-            partial = ' '.join(words[:num_words])
-            pos = text.lower().find(partial.lower(), start_pos)
-            if pos != -1:
-                return pos
-        
-        return -1
 
     def _create_segments_from_markers(self, markers: List[Dict], full_text: str) -> List[TopicSegment]:
         """Create segments from validated markers"""
@@ -673,8 +420,30 @@ TRANSCRIPT SAMPLES:
         
         return segments
 
+    def _find_marker_position(self, text: str, marker: str, start_pos: int = 0) -> int:
+        """Find marker position with fuzzy matching"""
+        # Try exact match first
+        pos = text.find(marker, start_pos)
+        if pos != -1:
+            return pos
+        
+        # Try case-insensitive
+        pos = text.lower().find(marker.lower(), start_pos)
+        if pos != -1:
+            return pos
+        
+        # Try progressive word matching
+        words = marker.split()
+        for num_words in range(len(words), max(1, len(words)//2), -1):
+            partial = ' '.join(words[:num_words])
+            pos = text.lower().find(partial.lower(), start_pos)
+            if pos != -1:
+                return pos
+        
+        return -1
+
     def _pattern_based_segmentation_enhanced(self, text: str) -> List[TopicSegment]:
-        """Enhanced pattern matching with confidence boosting"""
+        """Enhanced pattern matching with compiled regex"""
         found_positions = []
         
         # Use pre-compiled patterns for better performance
@@ -683,7 +452,7 @@ TRANSCRIPT SAMPLES:
                 try:
                     matches = list(pattern.finditer(text))
                     for match in matches:
-                        confidence = self._calculate_pattern_confidence(match, text, topic)
+                        confidence = self._calculate_pattern_confidence(match, text)
                         found_positions.append({
                             'topic': topic,
                             'position': match.start(),
@@ -691,7 +460,7 @@ TRANSCRIPT SAMPLES:
                             'confidence': confidence
                         })
                 except Exception as e:
-                    logger.debug(f"Pattern matching error for {topic}: {e}")
+                    st.debug(f"Pattern matching error for {topic}: {e}")
                     continue
         
         # Sort by position and remove duplicates
@@ -700,8 +469,8 @@ TRANSCRIPT SAMPLES:
         
         return self._create_segments_from_positions(found_positions, text)
 
-    def _calculate_pattern_confidence(self, match, text: str, topic: str) -> float:
-        """Calculate confidence based on pattern context with boosting"""
+    def _calculate_pattern_confidence(self, match, text: str) -> float:
+        """Calculate confidence based on pattern context"""
         base_confidence = 0.7
         
         # Increase confidence if match is at sentence boundary
@@ -714,13 +483,6 @@ TRANSCRIPT SAMPLES:
         following_text = text[end:end+50].lower()
         if any(word in following_text for word in ['?', 'please', 'tell', 'describe']):
             base_confidence += 0.1
-        
-        # Boost if multiple patterns from same topic appear nearby
-        nearby_text = text[max(0, match.start()-200):match.end()+200]
-        topic_pattern_count = sum(1 for p in self._compiled_patterns.get(topic, []) 
-                                  if p.search(nearby_text))
-        if topic_pattern_count > 1:
-            base_confidence += 0.05 * (topic_pattern_count - 1)
         
         return min(1.0, base_confidence)
 
@@ -783,98 +545,15 @@ TRANSCRIPT SAMPLES:
         
         return segments
 
-    def _keyword_density_segmentation(self, text: str) -> List[TopicSegment]:
-        """Segment based on keyword density shifts with improvements"""
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-        
-        # Check minimum sentence requirement
-        if len(sentences) < self.config.min_sentences_for_density:
-            logger.info(f"Too few sentences ({len(sentences)}) for keyword density analysis")
-            return []
-        
-        # Pre-lowercase text for better performance
-        words_by_sentence = []
-        for sent in sentences:
-            words = [w.lower() for w in re.findall(r'\b\w+\b', sent)]
-            words_by_sentence.append(words)
-        
-        # Compute density scores per sentence
-        densities = []
-        for i, words in enumerate(words_by_sentence):
-            if not words:
-                densities.append(None)
-                continue
-            
-            word_count = len(words)
-            words_set = set(words)  # Convert to set for O(1) lookup
-            
-            # Calculate scores using optimized keyword sets
-            group_scores = {}
-            for topic, keyword_set in self.keyword_sets.items():
-                # Count unique keyword matches
-                unique_matches = len(keyword_set.intersection(words_set))
-                group_scores[topic] = unique_matches / word_count if word_count > 0 else 0
-            
-            max_score = 0
-            max_topic = None
-            for topic, score in group_scores.items():
-                if score > max_score:
-                    max_score = score
-                    max_topic = topic
-            
-            if max_topic and max_score > self.config.keyword_density_threshold:
-                densities.append({'topic': max_topic, 'score': max_score})
-            else:
-                densities.append(None)
-        
-        # Handle None propagation - carry forward previous topic
-        for i in range(1, len(densities)):
-            if densities[i] is None and i > 0 and densities[i-1] is not None:
-                densities[i] = densities[i-1]
-        
-        # Detect shifts where topic changes with high confidence
-        positions = [0]
-        topics = ['Introduction']
-        for i in range(1, len(densities)):
-            prev_density = densities[i-1]
-            curr_density = densities[i]
-            if (curr_density and prev_density and 
-                curr_density['topic'] != prev_density['topic'] and
-                curr_density['score'] > self.config.keyword_density_threshold):
-                pos = sum(len(s) + 1 for s in sentences[:i])
-                if pos > positions[-1] + self.config.min_segment_gap:
-                    positions.append(pos)
-                    topics.append(curr_density['topic'])
-        
-        positions.append(len(text))
-        
-        # Create segments
-        segments = []
-        for i in range(len(positions) - 1):
-            start, end = positions[i], positions[i+1]
-            if end - start < self.config.min_chunk_size / 2:
-                continue
-            
-            segments.append(TopicSegment(
-                topic=topics[i] if i < len(topics) else 'Content',
-                start_idx=start,
-                end_idx=end,
-                text=text[start:end],
-                confidence=0.6,
-                method='density'
-            ))
-        
-        return segments
-
     def _create_uniform_segments(self, text: str) -> List[TopicSegment]:
-        """Create uniform segments as final fallback"""
+        """Create uniform segments as fallback"""
         segments = []
         segment_size = self.config.target_chunk_size
         overlap = self.config.overlap_size
         
         for i in range(0, len(text), segment_size - overlap):
             end = min(i + segment_size, len(text))
-            if end - i < self.config.min_chunk_size / 2 and segments:
+            if end - i < self.config.min_chunk_size and segments:
                 # Merge with last segment if too small
                 segments[-1].text += text[i:end]
                 segments[-1].end_idx = end
@@ -889,6 +568,18 @@ TRANSCRIPT SAMPLES:
                 ))
         
         return segments
+
+    def _merge_detection_results(self, primary: List[TopicSegment], 
+                               secondary: List[TopicSegment]) -> List[TopicSegment]:
+        """Intelligently merge results from different detection methods"""
+        if not secondary:
+            return primary
+        if not primary:
+            return secondary
+        
+        # For now, prefer LLM results but could implement more sophisticated merging
+        # TODO: Implement weighted merging based on confidence scores
+        return primary
 
     def _evaluate_segmentation_quality(self, segments: List[TopicSegment], 
                                      total_length: int) -> float:
@@ -930,19 +621,22 @@ TRANSCRIPT SAMPLES:
         return weighted_score
 
     def _correct_segments_safe(self, segments: List[TopicSegment]) -> List[TopicSegment]:
-        """Safe segment correction with intelligent merging and weighted confidence"""
+        """Safe segment correction without list modification during iteration"""
         if not segments:
             return segments
         
         corrected = []
-        i = 0
+        skip_next = False
         
-        while i < len(segments):
+        for i in range(len(segments)):
+            if skip_next:
+                skip_next = False
+                continue
+            
             current = segments[i]
             
             # Skip empty segments
             if not current.text.strip():
-                i += 1
                 continue
             
             # Try to merge small segments with next segment
@@ -952,74 +646,27 @@ TRANSCRIPT SAMPLES:
                 next_segment = segments[i + 1]
                 combined_size = len(current.text) + len(next_segment.text)
                 
-                if (combined_size < self.config.max_chunk_size and 
-                    self._should_merge_segments(current, next_segment)):
-                    
-                    # Calculate weighted average confidence
-                    weighted_confidence = (
-                        (current.confidence * len(current.text) + 
-                         next_segment.confidence * len(next_segment.text)) / 
-                        combined_size
-                    )
-                    
+                if combined_size < self.config.max_chunk_size:
                     # Create merged segment
                     merged = TopicSegment(
                         topic=f"{current.topic} & {next_segment.topic}",
                         start_idx=current.start_idx,
                         end_idx=next_segment.end_idx,
                         text=current.text + "\n\n" + next_segment.text,
-                        confidence=weighted_confidence,
+                        confidence=min(current.confidence, next_segment.confidence),
                         method='corrected-merged'
                     )
                     corrected.append(merged)
-                    i += 2  # Skip the next segment since we merged it
+                    skip_next = True  # Skip the next segment since we merged it
                     continue
             
             # Add segment as-is if no merging occurred
             corrected.append(current)
-            i += 1
         
         return corrected
 
-    def _should_merge_segments(self, seg1: TopicSegment, seg2: TopicSegment) -> bool:
-        """Intelligent merging based on topic similarity with improved 'other' handling"""
-        # Define categories
-        pre_incident = {'Personal Information', 'Employment', 'Medical History'}
-        incident = {'Incident Details', 'Post-Incident Events'}
-        post_incident = {'Medical Treatment', 'Current Condition'}
-        
-        def get_category(topic_name):
-            # Handle compound topics
-            for t in topic_name.split(' & '):
-                t = t.strip()
-                if t in pre_incident:
-                    return 'pre'
-                if t in incident:
-                    return 'incident'
-                if t in post_incident:
-                    return 'post'
-            return 'other'
-        
-        cat1 = get_category(seg1.topic)
-        cat2 = get_category(seg2.topic)
-        
-        # Prefer not to merge across major category boundaries
-        if cat1 != 'other' and cat2 != 'other' and cat1 != cat2:
-            logger.debug(f"Preventing merge between '{seg1.topic}' ({cat1}) and '{seg2.topic}' ({cat2}).")
-            return False
-        
-        # Be more cautious with 'other' categories
-        if cat1 == 'other' and cat2 == 'other':
-            # Only merge if segments are small or confidence is high
-            if (min(len(seg1.text), len(seg2.text)) < self.config.min_chunk_size / 2 or
-                min(seg1.confidence, seg2.confidence) > 0.8):
-                return True
-            return False
-        
-        return True
-
     def _optimize_segment_sizes(self, segments: List[TopicSegment]) -> List[TopicSegment]:
-        """Optimize segment sizes for target range with weighted confidence"""
+        """Optimize segment sizes for target range"""
         optimized = []
         
         # First pass: handle oversized segments
@@ -1042,22 +689,13 @@ TRANSCRIPT SAMPLES:
                 next_seg = optimized[i + 1]
                 combined_size = len(current.text) + len(next_seg.text)
                 
-                if (combined_size <= self.config.max_chunk_size and 
-                    self._should_merge_segments(current, next_seg)):
-                    
-                    # Calculate weighted average confidence
-                    weighted_confidence = (
-                        (current.confidence * len(current.text) + 
-                         next_seg.confidence * len(next_seg.text)) / 
-                        combined_size
-                    )
-                    
+                if combined_size <= self.config.max_chunk_size:
                     current = TopicSegment(
                         topic=f"{current.topic} + {next_seg.topic}",
                         start_idx=current.start_idx,
                         end_idx=next_seg.end_idx,
                         text=current.text + "\n\n" + next_seg.text,
-                        confidence=weighted_confidence,
+                        confidence=min(current.confidence, next_seg.confidence),
                         method='merged'
                     )
                     i += 1
@@ -1200,8 +838,6 @@ TRANSCRIPT SAMPLES:
         if not text or max_size <= 0:
             return ""
         
-        text = text.strip()
-        
         if is_prefix:
             # Extract from beginning
             if len(text) <= max_size:
@@ -1209,7 +845,7 @@ TRANSCRIPT SAMPLES:
             
             extract = text[:max_size]
             # Find last sentence boundary
-            match = re.search(r'^(.*?[.!?])\s', extract)
+            match = re.search(r'^(.*?[.!?])', extract)
             if match and len(match.group(1)) >= self.config.preview_sentence_min_length:
                 return match.group(1)
             else:
@@ -1241,7 +877,7 @@ TRANSCRIPT SAMPLES:
         for i, chunk in enumerate(chunks):
             # Remove empty or tiny chunks
             if not chunk or len(chunk.strip()) < 50:
-                logger.debug(f"Removing tiny chunk {i}: {len(chunk)} chars")
+                st.debug(f"Removing tiny chunk {i}: {len(chunk)} chars")
                 continue
             
             # Handle oversized chunks

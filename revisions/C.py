@@ -44,10 +44,6 @@ class ChunkerConfig:
     emergency_split_threshold: float = 1.5
     keyword_density_threshold: float = 0.15
     min_sentences_for_density: int = 5  # New config parameter
-    use_full_text_for_short_docs: bool = True
-    full_text_threshold: int = 100000  # ~100 pages
-    sampling_percentage: float = 0.25  # 25% sampling for longer docs
-    max_sample_size: int = 75000  # Cap sampling at 75k chars
     custom_keyword_groups: Optional[Dict[str, List[str]]] = None
 
     def __post_init__(self):
@@ -284,15 +280,7 @@ class EnhancedTopicBasedChunker:
             except Exception as e:
                 st.warning(f"Pattern detection failed: {e}")
         
-        # Method 2.5: Dynamic keyword detection enhancement
-        if not all_segments and self.call_llm:
-            try:
-                st.info("   Attempting dynamic keyword detection...")
-                self._update_keywords_dynamically(text)
-            except Exception as e:
-                st.warning(f"Dynamic keyword detection failed: {e}")
-        
-        # Method 3: Keyword density fallback (now with potentially enhanced keywords)
+        # Method 3: Keyword density fallback
         if not all_segments:
             try:
                 density_segments = self._keyword_density_segmentation(text)
@@ -353,13 +341,6 @@ class EnhancedTopicBasedChunker:
             
             samples = self._get_strategic_samples(text, sample_size)
             
-            # Provide user feedback on sampling strategy
-            if len(samples) == 1 and len(samples[0]) == len(text):
-                st.info("   ✓ Using full-text analysis for maximum accuracy")
-            elif len(samples) > 1:
-                total_sampled = sum(len(s) for s in samples)
-                st.info(f"   ✓ Sampling {total_sampled:,} chars across {len(samples)} segments ({(total_sampled/len(text))*100:.1f}% coverage)")
-            
             # Improved prompt with better structure
             prompt = self._create_llm_prompt(samples)
             
@@ -376,46 +357,21 @@ class EnhancedTopicBasedChunker:
         return self._parse_llm_response_enhanced(response, text)
 
     def _get_strategic_samples(self, text: str, sample_size: int) -> List[str]:
-        """Enhanced strategic sampling with full-text for short docs and 25% sampling for longer"""
+        """Get strategic samples from text for LLM analysis"""
         text_length = len(text)
         
-        # Return full text for documents under ~100 pages
-        if (self.config.use_full_text_for_short_docs and 
-            text_length <= self.config.full_text_threshold):
-            logger.info(f"Using full-text analysis for document ({text_length:,} chars, ~{text_length//1000} pages)")
+        if text_length <= sample_size:
             return [text]
         
-        # For longer documents, sample 25% of content
-        if text_length > self.config.full_text_threshold:
-            # Calculate 25% of document or max sample size, whichever is smaller
-            target_sample_size = min(
-                int(text_length * self.config.sampling_percentage),
-                self.config.max_sample_size
-            )
-            logger.info(f"Large document detected ({text_length:,} chars, ~{text_length//1000} pages)")
-            logger.info(f"Sampling {target_sample_size:,} chars ({(target_sample_size/text_length)*100:.1f}% of content)")
-            
-            # Determine number of samples based on document size
-            if text_length < 150000:  # 100-150 pages
-                num_samples = 5
-            elif text_length < 250000:  # 150-250 pages  
-                num_samples = 7
-            else:  # 250+ pages
-                num_samples = 10
-            
-            sample_per = target_sample_size // num_samples
-            samples = []
-            
-            # Evenly distribute samples across document
-            for i in range(num_samples):
-                start = int(i * text_length / num_samples)
-                end = min(start + sample_per, text_length)
-                samples.append(text[start:end])
-            
-            return samples
+        # Get samples from beginning, middle, and end
+        third = sample_size // 3
+        samples = [
+            text[:third],
+            text[text_length//2 - third//2:text_length//2 + third//2],
+            text[-third:]
+        ]
         
-        # Fallback for edge cases (shouldn't normally reach here)
-        return [text] if text_length <= sample_size else [text[:sample_size]]
+        return samples
 
     def _create_llm_prompt(self, samples: List[str]) -> str:
         """Create structured prompt for LLM"""
@@ -498,73 +454,6 @@ TRANSCRIPT SAMPLES:
         
         # Create segments with improved positioning
         return self._create_segments_from_markers(sorted_markers, full_text)
-
-    def _update_keywords_dynamically(self, text: str):
-        """Update keyword sets based on dynamic analysis of the text with caching"""
-        # Check cache first
-        text_hash = self._get_text_hash(text) if self.enable_caching else None
-        keyword_cache_key = f"keywords_{text_hash}" if text_hash else None
-        
-        if keyword_cache_key and self._response_cache is not None and keyword_cache_key in self._response_cache:
-            self.processing_stats['cache_hits'] += 1
-            cached_keywords = self._response_cache[keyword_cache_key]
-            self._apply_cached_keywords(cached_keywords)
-            return
-        
-        # Get strategic samples from the text
-        samples = self._get_strategic_samples(text, 15000)
-        
-        keyword_prompt = f"""Extract 5-8 main topics from this deposition transcript samples, and for each topic list 3-5 associated keywords.
-Format: TOPIC: keywords, separated, by, commas
-Example: Employment History: job, position, duties, salary, employer
-
-TRANSCRIPT SAMPLES:
-{' [...] '.join(samples)}"""
-        
-        response = self.call_llm(keyword_prompt, self.llm_provider, self.llm_model)
-        
-        if response.startswith("Error:"):
-            raise Exception(f"Dynamic keyword extraction failed: {response}")
-        
-        # Parse response and extract dynamic keywords
-        dynamic_keywords = {}
-        for line in response.split('\n'):
-            if ':' in line and not line.strip().startswith('#'):
-                try:
-                    topic, kws = line.split(':', 1)
-                    topic = topic.strip()
-                    keywords = [kw.strip() for kw in kws.split(',') if kw.strip()]
-                    if topic and keywords:
-                        dynamic_keywords[topic] = keywords
-                except:
-                    continue
-        
-        # Cache the extracted keywords
-        if keyword_cache_key and self._response_cache is not None:
-            self._response_cache[keyword_cache_key] = dynamic_keywords
-        
-        # Apply the keywords to the current instance
-        self._apply_cached_keywords(dynamic_keywords)
-    
-    def _apply_cached_keywords(self, dynamic_keywords: Dict[str, List[str]]):
-        """Apply dynamic keywords from cache or fresh extraction"""
-        keywords_added = 0
-        for topic, keywords in dynamic_keywords.items():
-            # Create new keyword set or update existing one
-            keyword_set = set(kw.lower() for kw in keywords)
-            if topic in self.keyword_sets:
-                # Merge with existing keywords
-                original_size = len(self.keyword_sets[topic])
-                self.keyword_sets[topic].update(keyword_set)
-                keywords_added += len(self.keyword_sets[topic]) - original_size
-            else:
-                # Create new topic
-                self.keyword_sets[topic] = keyword_set
-                self.keyword_groups[topic] = keywords
-                keywords_added += len(keyword_set)
-        
-        if keywords_added > 0:
-            st.info(f"   ✓ Added {keywords_added} dynamic keywords across {len(dynamic_keywords)} topics")
 
     def _parse_marker_line(self, line: str) -> Optional[Dict]:
         """Parse a single marker line from LLM response"""
