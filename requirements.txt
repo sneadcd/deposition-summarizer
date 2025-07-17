@@ -1,3 +1,14 @@
+# Main packages for Deposition Summarizer
+# - streamlit: Web UI framework
+# - openai: OpenAI API client
+# - anthropic: Claude API client  
+# - google-generativeai: Gemini API client
+# - python-docx: Generate Word documents
+# - PyMuPDF: PDF parsing
+# - langchain-text-splitters: Text chunking utilities
+# - python-dotenv: Environment variable management
+
+# Full dependency list with versions:
 altair==5.5.0
 annotated-types==0.7.0
 anthropic==0.52.1
