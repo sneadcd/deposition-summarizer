@@ -25,4 +25,4 @@ Generate only the context summary itself, based strictly on the text provided be
 --- END GLOBAL CONTEXT INSTRUCTIONS ---
 --- START OF DEPOSITION TEXT FOR CONTEXT GENERATION ---
 [The script will append the *entire* transcript text here]
---- END OF DEPOSITION TEXT ---
+--- END OF DEPOSITION TEXT --- /no_think

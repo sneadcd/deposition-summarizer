@@ -43,6 +43,6 @@ o	Company Subsequent Mentions (within this segment summary): Use a consistent, c
 o	Typographical/Transcription Errors: Silently correct whenever possible based on knowledge and context. Examples: "flonay" -> "Flonase"; "teh" -> "the"; contextually obvious numerical formats like "97 dash 94 Main St" -> "9794 Main St" or "two thousand five hundred" -> "2,500"; fixing clearly misspelled common words only if context mandates the correction (e.g., "witnes" -> "witness").
 o	Ambiguity Prioritizes Original Text: If a potential error creates ANY ambiguity, could plausibly alter the substance, or requires ANY assumption, DO NOT CORRECT IT. Summarize the statement as closely as possible to the original transcript text, even if awkward. Preserving the potentially flawed original statement is mandatory in cases of ambiguity. Do not guess or invent to resolve unclear passages.
 Final Output Requirement: Your output must be ONLY the dense, objective, factual block of paragraph text summarizing the testimony content of this specific segment, adhering strictly to all directives above.
---- END STANDARD SUMMARY INSTRUCTIONS ---
+--- END STANDARD SUMMARY INSTRUCTIONS --- /no_think
 
 

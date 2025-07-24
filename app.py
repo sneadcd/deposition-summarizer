@@ -1,5 +1,5 @@
 # app.py
-# Final Version: Integrated Topic-Based Chunking, Enhanced Robustness, and UX Improvements
+# Revision: Added response validation and more aggressive batching for local LLM robustness.
 
 import streamlit as st
 import os
@@ -25,7 +25,6 @@ import fitz
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # Import the new, powerful chunker AND its configuration class
-# <-- CHANGE: Added ChunkerConfig to the import
 from enhanced_topic_chunker_fixed import EnhancedTopicBasedChunker, ChunkerConfig
 
 # --- Set page config FIRST ---
@@ -36,6 +35,7 @@ OUTPUT_DIRECTORY = r"D:\OneDrive\OneDrive - Barnes Maloney PLLC\Documents\Depo S
 YOUR_SITE_URL = "http://localhost:8501"
 YOUR_APP_NAME = "Deposition Summarizer"
 INSTRUCTIONS_DIR = "instructions"
+LM_STUDIO_BASE_URL = "http://localhost:1234/v1" 
 
 # --- Setup Logging ---
 log_dir = os.path.join(OUTPUT_DIRECTORY, "logs")
@@ -60,6 +60,7 @@ api_keys = {
     "Anthropic": os.getenv("ANTHROPIC_API_KEY"),
     "Google": os.getenv("GOOGLE_API_KEY"),
     "OpenRouter": os.getenv("OPENROUTER_API_KEY"),
+    "LM Studio": "lm-studio-key", 
 }
 
 # --- Initialize LLM Clients ---
@@ -111,16 +112,57 @@ if api_keys["OpenRouter"]:
 else:
     client_load_status["OpenRouter"] = "⚠️ Key Missing"
 
+# LM Studio Client Initialization
+try:
+    requests.get(f"{LM_STUDIO_BASE_URL}/models", timeout=5)
+    clients["LM Studio"] = OpenAI(base_url=LM_STUDIO_BASE_URL, api_key=api_keys["LM Studio"])
+    client_load_status["LM Studio"] = "✅ Initialized"
+except requests.exceptions.RequestException:
+    client_load_status["LM Studio"] = "❌ Server Not Found"
+except Exception as e:
+    client_load_status["LM Studio"] = f"❌ Error: {e}"
+
+
 # --- Model Mapping ---
 MODEL_MAPPING = {
     "OpenAI": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
     "Anthropic": ["claude-3-5-sonnet-20240620", "claude-3-haiku-20240307", "claude-3-opus-20240229"],
     "Google": ["gemini-1.5-pro-latest", "gemini-1.5-flash-latest"],
-    "OpenRouter": ["Fetching..."]
+    "OpenRouter": ["Fetching..."],
+    "LM Studio": ["Fetching..."], 
 }
 OPENROUTER_MODELS_CACHE = None
+LM_STUDIO_MODELS_CACHE = None 
 
 # --- Helper Functions ---
+
+@st.cache_data(ttl=300) 
+def fetch_lm_studio_models():
+    global LM_STUDIO_MODELS_CACHE
+    if LM_STUDIO_MODELS_CACHE and not LM_STUDIO_MODELS_CACHE[0].startswith("Error:"):
+        return LM_STUDIO_MODELS_CACHE
+    
+    logger.info("Fetching LM Studio models list...")
+    try:
+        response = requests.get(f"{LM_STUDIO_BASE_URL}/models", timeout=10)
+        response.raise_for_status()
+        models_data = response.json().get("data", [])
+        model_ids = sorted([model.get("id") for model in models_data if model.get("id")])
+        if not model_ids: result = ["Error: No models found"]
+        else: result = model_ids
+        logger.info(f"Fetched {len(result)} LM Studio models.")
+        LM_STUDIO_MODELS_CACHE = result
+        return result
+    except requests.exceptions.RequestException:
+        logger.error("Failed to fetch LM Studio models: Server not running or unreachable.")
+        result = ["Error: Server not found"]
+        LM_STUDIO_MODELS_CACHE = result
+        return result
+    except Exception as e:
+        logger.error(f"Failed to fetch LM Studio models: {e}")
+        result = [f"Error: {e}"]
+        LM_STUDIO_MODELS_CACHE = result
+        return result
 
 @st.cache_data(ttl=3600)
 def fetch_openrouter_models(api_key):
@@ -154,19 +196,20 @@ def load_instruction(file_path):
         return ""
 
 def call_llm(prompt, provider, model_name):
-    # This is the core API call function, now wrapped by call_llm_with_retry
     logger.info(f"LLM Call: Provider='{provider}', Model='{model_name}'")
     client = clients.get(provider)
     if not client: return f"Error: Client for {provider} not initialized."
     if model_name.startswith("Error:") or model_name == "Fetching...": return f"Error: Invalid model '{model_name}' selected."
 
     try:
-        if provider in ["OpenAI", "OpenRouter"]:
+        if provider in ["OpenAI", "OpenRouter", "LM Studio"]:
             response = client.chat.completions.create(model=model_name, messages=[{"role": "user", "content": prompt}])
-            return response.choices[0].message.content.strip()
+            content = response.choices[0].message.content.strip()
+            # <-- NEW: Log a snippet of the response for easier debugging -->
+            logger.info(f"LLM Response Snippet: {content[:100]}...")
+            return content
 
         elif provider == "Anthropic":
-            # Enhanced system prompt splitting logic
             system_prompt, user_prompt = "", prompt
             match = re.search(r'BEGIN TRANSCRIPT\s*(?:TEXT|SEGMENT)?\s*:?', prompt, flags=re.IGNORECASE)
             if match:
@@ -183,7 +226,9 @@ def call_llm(prompt, provider, model_name):
             )
             if response.stop_reason == "max_tokens":
                 logger.warning(f"Anthropic response truncated due to max_tokens.")
-            return "".join([block.text for block in response.content if hasattr(block, 'text')]).strip()
+            content = "".join([block.text for block in response.content if hasattr(block, 'text')]).strip()
+            logger.info(f"LLM Response Snippet: {content[:100]}...")
+            return content
 
         elif provider == "Google":
             safety_settings = {category: HarmBlockThreshold.BLOCK_NONE for category in HarmCategory}
@@ -191,7 +236,9 @@ def call_llm(prompt, provider, model_name):
             response = model.generate_content(prompt)
             if response.prompt_feedback.block_reason:
                 return f"Error: Google API Blocked Prompt ({response.prompt_feedback.block_reason})"
-            return response.text.strip()
+            content = response.text.strip()
+            logger.info(f"LLM Response Snippet: {content[:100]}...")
+            return content
         else:
             return f"Error: Unknown provider {provider}."
 
@@ -205,16 +252,23 @@ def call_llm(prompt, provider, model_name):
 def call_llm_with_retry(prompt, provider, model_name, max_retries=3):
     for attempt in range(max_retries):
         result = call_llm(prompt, provider, model_name)
-        if not result.startswith("Error:"):
-            return result
         
-        # Don't retry auth/not found errors
+        # <-- NEW: Validate the response content -->
+        if not result.startswith("Error:"):
+            # Check for empty or placeholder-only responses
+            clean_result = result.lower().replace("<think>", "").replace("</think>", "").strip()
+            if len(clean_result) > 10: # Ensure there's some meaningful content
+                return result
+            else:
+                logger.warning(f"LLM returned an empty or invalid response (attempt {attempt + 1}/{max_retries}). Retrying...")
+                result = "Error: LLM returned empty response" # Set error for retry logic
+        
         if any(keyword in result.lower() for keyword in ["authentication", "not found", "invalid"]):
             logger.error(f"Permanent LLM error, not retrying: {result}")
             return result
             
         logger.warning(f"LLM call failed (attempt {attempt + 1}/{max_retries}): {result}. Retrying...")
-        time.sleep(2 ** attempt) # Exponential backoff
+        time.sleep(2 ** attempt) 
     
     logger.error(f"LLM call failed after {max_retries} attempts. Last error: {result}")
     return f"Error: Max retries exceeded. Last error: {result}"
@@ -258,27 +312,23 @@ def parse_uploaded_file(uploaded_file):
         return None, f"Error parsing file: {e}"
 
 def chunk_text(text, chunk_size=8000, chunk_overlap=400):
-    """Fallback recursive chunker."""
     logger.info("Using fallback RecursiveCharacterTextSplitter for chunking.")
     if not text or not text.strip(): return []
     splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     return splitter.split_text(text)
 
 def enhanced_chunk_text(text, provider, model, chunk_size=8000, chunk_overlap=400):
-    """Primary chunking function using the enhanced topic-based method."""
     if not provider or not model or len(text) < 5000:
         logger.info("Text too short or LLM not specified for topic chunking, using fallback.")
         return chunk_text(text, chunk_size, chunk_overlap)
         
     logger.info(f"Attempting Enhanced Topic-Based Chunking with {provider}/{model}...")
     try:
-        # <-- CHANGE: Create the config object first
         chunker_config = ChunkerConfig(
             target_chunk_size=chunk_size,
             overlap_size=chunk_overlap
         )
         
-        # <-- CHANGE: Pass the config object to the chunker
         chunker = EnhancedTopicBasedChunker(
             llm_provider=provider,
             llm_model=model,
@@ -299,13 +349,11 @@ def enhanced_chunk_text(text, provider, model, chunk_size=8000, chunk_overlap=40
         return chunk_text(text, chunk_size, chunk_overlap)
 
 def generate_docx_bytes_safe(content_dict: Dict[str, str]) -> bytes:
-    """Robust DOCX generation that cleans invalid XML characters."""
     try:
         document = docx.Document()
         for title, text in content_dict.items():
             clean_title = ''.join(c for c in str(title) if c in string.printable) or "Untitled"
             
-            # Aggressively clean text for XML compatibility
             clean_text = ""
             for char in str(text):
                 codepoint = ord(char)
@@ -324,10 +372,9 @@ def generate_docx_bytes_safe(content_dict: Dict[str, str]) -> bytes:
         return bio.getvalue()
     except Exception as e:
         logger.error(f"Critical error generating DOCX: {e}")
-        return None # Signal failure
+        return None 
 
 def save_as_text_fallback(content_dict, full_path):
-    """Saves content as a .txt file if DOCX generation fails."""
     txt_path = full_path.replace('.docx', '.txt')
     logger.warning(f"DOCX generation failed. Saving as fallback text file: {txt_path}")
     try:
@@ -359,6 +406,35 @@ def save_bytes_to_file(file_bytes, full_path):
         logger.error(f"Failed to save file '{full_path}': {e}\n{traceback.format_exc()}")
         return None
 
+def get_strategic_samples(text: str, max_sample_size: int, num_samples: int = 5) -> str:
+    text_length = len(text)
+    if text_length <= max_sample_size:
+        logger.info(f"Text length ({text_length}) is within the limit ({max_sample_size}), using full text for context.")
+        return text
+
+    logger.info(f"Text length ({text_length}) exceeds limit. Generating strategic samples of size {max_sample_size}.")
+    
+    sample_per = max_sample_size // num_samples
+    samples = []
+    
+    samples.append(text[:sample_per])
+    
+    middle_text = text[sample_per:-sample_per]
+    middle_length = len(middle_text)
+    
+    num_middle_samples = num_samples - 2
+    if num_middle_samples > 0 and middle_length > 0:
+        for i in range(num_middle_samples):
+            start = int(i * middle_length / num_middle_samples)
+            end = min(start + sample_per, middle_length)
+            samples.append(middle_text[start:end])
+
+    samples.append(text[-sample_per:])
+    
+    sampled_text = "\n\n... [SNIPPED] ...\n\n".join(samples)
+    logger.info(f"Generated a sampled context of {len(sampled_text)} characters.")
+    return sampled_text
+
 
 # --- Load Instructions & Set Up Sidebar ---
 global_context_instructions = load_instruction(os.path.join(INSTRUCTIONS_DIR, "global_context_instructions.txt"))
@@ -374,22 +450,52 @@ st.sidebar.title("⚙️ Config & Status")
 available_providers = [p for p, status in client_load_status.items() if "✅" in status]
 
 if not available_providers:
-    st.sidebar.error("No LLM providers initialized. Check `.env` file.")
+    st.sidebar.error("No LLM providers initialized. Check `.env` file and local servers.")
     selected_provider_context = selected_model_context = selected_provider_final = selected_model_final = None
 else:
-    # --- LLM Selection ---
     st.sidebar.subheader("1. Context & Segment LLM")
-    default_provider_idx = available_providers.index("OpenRouter") if "OpenRouter" in available_providers else 0
+    default_provider_idx = 0
+    if "LM Studio" in available_providers:
+        default_provider_idx = available_providers.index("LM Studio")
+    elif "OpenRouter" in available_providers:
+        default_provider_idx = available_providers.index("OpenRouter")
+
     selected_provider_context = st.sidebar.selectbox("Provider (Context)", available_providers, index=default_provider_idx, key="p1")
-    models_context = fetch_openrouter_models(api_keys.get(selected_provider_context)) if selected_provider_context == "OpenRouter" else MODEL_MAPPING.get(selected_provider_context, [])
+    
+    if selected_provider_context == "OpenRouter":
+        models_context = fetch_openrouter_models(api_keys.get(selected_provider_context))
+    elif selected_provider_context == "LM Studio":
+        models_context = fetch_lm_studio_models()
+    else:
+        models_context = MODEL_MAPPING.get(selected_provider_context, [])
+
     default_model_context = next((m for m in ["google/gemini-1.5-flash-latest", "claude-3-haiku-20240307", "gpt-4o-mini"] if m in models_context), models_context[0] if models_context else None)
     selected_model_context = st.sidebar.selectbox("Model (Context)", models_context, index=models_context.index(default_model_context) if default_model_context else 0, key="m1")
 
     st.sidebar.subheader("2. Final Synthesis LLM")
     selected_provider_final = st.sidebar.selectbox("Provider (Final)", available_providers, index=default_provider_idx, key="p2")
-    models_final = fetch_openrouter_models(api_keys.get(selected_provider_final)) if selected_provider_final == "OpenRouter" else MODEL_MAPPING.get(selected_provider_final, [])
+    
+    if selected_provider_final == "OpenRouter":
+        models_final = fetch_openrouter_models(api_keys.get(selected_provider_final))
+    elif selected_provider_final == "LM Studio":
+        models_final = fetch_lm_studio_models()
+    else:
+        models_final = MODEL_MAPPING.get(selected_provider_final, [])
+
     default_model_final = next((m for m in ["anthropic/claude-3.5-sonnet", "openai/gpt-4o", "google/gemini-1.5-pro-latest"] if m in models_final), models_final[0] if models_final else None)
     selected_model_final = st.sidebar.selectbox("Model (Final)", models_final, index=models_final.index(default_model_final) if default_model_final else 0, key="m2")
+    
+    st.sidebar.subheader("3. Advanced Settings")
+    with st.sidebar.expander("Adjust Context Size"):
+        context_char_limit = st.number_input(
+            "Context Sample Size (Characters)", 
+            min_value=4000, 
+            max_value=120000, 
+            value=64000, 
+            step=4000,
+            help="Set the max number of characters to use for the initial global context summary. ~4 characters per token. A 32k model can handle ~120,000 characters."
+        )
+
 
 # --- Status Displays ---
 with st.sidebar.expander("API & File Status", expanded=False):
@@ -416,10 +522,9 @@ with col2:
 
 
 # --- Process Button & Logic ---
-process_button_disabled = not all([uploaded_file, selected_model_context, selected_model_final, not selected_model_context.startswith("Error:"), not selected_model_final.startswith("Error:")])
+process_button_disabled = not all([uploaded_file, selected_model_context, selected_model_final, not str(selected_model_context).startswith("Error:"), not str(selected_model_final).startswith("Error:")])
 if st.button("🚀 Generate & Save Summaries", type="primary", disabled=process_button_disabled):
     
-    # --- Pre-run Checks ---
     if not all([global_context_instructions, standard_instructions, os.path.exists(role_files[deponent_role])]):
         st.error("One or more essential instruction files are missing. Check status in the sidebar."); st.stop()
     try:
@@ -451,7 +556,10 @@ if st.button("🚀 Generate & Save Summaries", type="primary", disabled=process_
 
         # Step 2: Generate Global Context
         update_status(15, f"Step 2/7: Generating global context ({selected_model_context})...")
-        context_prompt = f"{global_context_instructions}\n\nCustom Instructions:\n{custom_instructions}\n\nBEGIN TRANSCRIPT TEXT:\n{transcript_text}"
+        
+        context_text_sample = get_strategic_samples(transcript_text, max_sample_size=context_char_limit)
+        context_prompt = f"{global_context_instructions}\n\nCustom Instructions:\n{custom_instructions}\n\nBEGIN TRANSCRIPT TEXT:\n{context_text_sample}"
+        
         global_context = call_llm_with_retry(context_prompt, selected_provider_context, selected_model_context)
         if global_context.startswith("Error:"): st.error(f"Global context generation failed: {global_context}"); st.stop()
         update_status(25, "✔️ Step 2: Global context generated.")
@@ -498,15 +606,14 @@ if st.button("🚀 Generate & Save Summaries", type="primary", disabled=process_
             st.warning("No valid segment summaries were generated. Skipping final synthesis."); st.stop()
         update_status(95, f"Step 6/7: Generating final synthesis ({selected_model_final})...")
         
-        # Filter out error summaries
         valid_summaries = [s for s in segment_summaries if not s.startswith("*** Error")]
         combined_summaries = "\n\n---\n\n".join(valid_summaries)
         
-        # New: Batch if too long to prevent token limit issues
-        max_prompt_chars = 150000  # Conservative for Claude
+        # <-- MODIFIED: Lowered character limit to force batching for local models -->
+        max_prompt_chars = 40000 
         if len(combined_summaries) > max_prompt_chars:
             st.info(f"   Large deposition detected ({len(combined_summaries):,} chars), using batched synthesis...")
-            batch_size = 5  # Process 5 summaries at a time
+            batch_size = 5
             batched_summaries = []
             
             for i in range(0, len(valid_summaries), batch_size):
@@ -529,7 +636,6 @@ if st.button("🚀 Generate & Save Summaries", type="primary", disabled=process_
             else:
                 st.error("All batches failed, cannot proceed with synthesis"); st.stop()
         
-        # Final synthesis
         final_prompt = f"{role_outline_instructions}\n\nCustom Instructions:\n{custom_instructions}\n\nBEGIN SUMMARIES TO SYNTHESIZE:\n{combined_summaries}"
         final_summary = call_llm_with_retry(final_prompt, selected_provider_final, selected_model_final)
         if final_summary.startswith("Error:"): st.error(f"Final synthesis failed: {final_summary}"); st.stop()
