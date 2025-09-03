@@ -1,0 +1,107 @@
+# --- START PLAINTIFF OUTLINE & INSTRUCTIONS ---
+
+## Your Task: Final Deposition Summary Synthesis
+
+You are tasked with synthesizing a final, cohesive deposition summary for the PLAINTIFF based on a series of detailed segment summaries provided as input.
+
+### Immutable Directives
+Your execution of this task must strictly adhere to the following principles without deviation. Failure to comply precisely will negate the utility of the output.
+
+**Note:** Your intended audience is an insurance adjuster who is generally familiar with the details of this litigation and the legal process as a whole.
+
+### Core Principles:
+
+1.  **Input = Segment Summaries ONLY:** Your only source of information regarding the facts and details of the litigation at issue is the provided collection of detailed segment summaries. Assume these summaries accurately reflect their respective transcript segments per their own instructions.
+
+2.  **Handling Potential Transcription Errors in Input:** Be aware that the input segment summaries may contain transcription errors (e.g., misspelled names, incorrect place names (e.g. “Tarberton, Georgia” is actually Talbotton, Georgia, an allergy medication identified as “Flonay” is actually “Flonase”, etc). Use context, general knowledge, and deductive reasoning to identify and correct probable errors silently. Apply corrections based on consistency. Do NOT include any text about transcription quality in the final output.
+
+3.  **Mandatory Opening Sentence:** The very first sentence of the output MUST follow this exact format: "[Deponent's full name] was born [date of birth], his/her Social Security number is [SSN], and he/she has lived at [address] ([include other residents mentioned, e.g., 'with her daughter Destiny Banks']) for [X years/since DATE]." If DOB, SSN, Address, or duration are not explicitly stated, use "[Date of Birth not stated]", "[SSN not stated]", "[Address not stated]", or "[Duration at address not stated]" respectively. Combine naturally.
+
+4.  **Synthesize = Organize, Integrate, Deduplicate Based on Strict Categories:** Your primary goal is to organize and integrate the information from the segment summaries into the body of a single, flowing narrative structured by the specific outline below. Combine related information from different segments under the correct headings. Prioritize chronological presentation of events within each section where applicable (e.g., employment, accident sequence, medical treatment).
+
+5.  **Mandatory Structure & Headings (No Numerals):** Structure the entire final output strictly according to the subject-matter topics and exact headings provided in the 'PLAINTIFF DEPOSITION OUTLINE' below. Start the summary's main content directly with the first specified heading (e.g., "Personal: "). DO NOT use Roman numerals or any other numbering for sections. DO NOT include ANY introductory text (beyond the mandatory opening sentence), concluding remarks, or text not fitting under an outline heading.
+
+6.  **Strict Content Categorization (CRITICAL):** Adhere absolutely to the content definitions for each section outline below. This is vital for organization and deduplication.
+    *   **Medical History vs. Incidents:** ALL pre-accident medical history (diagnoses, surgeries, chronic conditions, related treatments, medications) MUST be placed ONLY within the "Health and Medical Information" section, under the "Pre-Accident Health:" subheading. DO NOT list prior surgeries or purely medical diagnoses under "Prior Incidents and Injuries".
+    *   **Prior Incidents:** This section is ONLY for specific past events (e.g., vehicle accidents, work accidents like a shelf falling, falls) and their direct consequences (e.g., related lawsuit/claim, immediate injury briefly noted if tied to the event).
+    *   **Legal/Financial:** Place items like bankruptcy, unemployment claims, disability claims, and prior workers' comp claims together logically, likely as a distinct paragraph within the "Prior Incidents and Injuries" section.
+
+7.  **Aggressive Deduplication (Structure-Driven):**
+    *   Eliminate redundant information across all sections based on the strict content categories. Ensure each distinct fact appears only once in the single most appropriate mandated category.
+    *   Synthesize information about the same topic mentioned in multiple segments into a single, comprehensive statement within its correct category. If details vary slightly or add nuance, integrate these nuances into the single statement.
+    *   **Example:** If a prior shoulder surgery is mentioned under employment history and later as a general prior injury, it MUST appear ONLY in the "Health and Medical Information - Pre-Accident Health" section, synthesized with all details provided. It should NOT appear under "Prior Incidents" or "Employment History".
+    *   When in doubt whether information is truly identical or adds nuance, ERR ON THE SIDE OF INCLUSION, but place it in the single most appropriate mandated category.
+
+8.  **Detail Level for Pre-Accident Medical History (Apply ONLY within “Pre-Accident Health” subheading):**
+    *   **Default Detail Level:** Summarize all pre-accident medical history items (diagnoses, surgeries, conditions, significant treatments) by including all available non-redundant details found in the segment summaries (e.g., condition/procedure, date/timeframe, specific body part, attributed cause, doctor/facility names, key treatment details, outcome).
+    *   **Three-Tier Relevance Classification:**
+        *   **Directly Related Items:** Prior medical issues involving the same specific body parts/conditions claimed in the subject accident. Example: If claimed injuries involve lumbar disc herniation, prior lumbar spine issues would be directly related.
+        *   **Partially Related Items:** Prior medical issues that may have indirect relevance, including: (1) conditions affecting adjacent anatomical regions, (2) conditions occurring within 2 years before the accident, or (3) chronic conditions that could impact recovery or symptom perception. Example: For a claimed knee injury, prior hip issues would be partially related.
+        *   **Clearly Unrelated Items:** Prior medical issues that meet ALL of these criteria: (1) involve distinctly different body systems, (2) occurred more than 2 years before the accident, and (3) have no documented connection to the claimed injuries. Example: For claimed neck injuries, a gallbladder removal from 5 years prior would be clearly unrelated.
+    *   **Detail Level Application:**
+        *   **Directly Related:** Include FULL available details (condition/procedure, precise dates, specific body part, attributed cause, doctor/facility, treatment details, outcome, patient’s subjective reports).
+        *   **Partially Related:** Include MODERATE details (condition/procedure, year/timeframe, specific body part, doctor/facility, general outcome only).
+        *   **Clearly Unrelated:** Summarize TERSELY with only basic condition/procedure name and approximate year/timeframe (e.g., “Gallbladder removal around 2007,” “Sinus surgery in 2015”).
+    *   **Special Instructions for Chronic Conditions:** For chronic, systemic, or multi-system conditions (e.g., diabetes, autoimmune disorders, chronic pain syndromes), always include moderate to full details regardless of apparent direct relationship, as these conditions may affect overall health status and injury recovery.
+    *   **Application:** This rule governs the level of detail for summarization within the “Pre-Accident Health” section. All distinct pre-accident items mentioned must still be included, but the amount of detail varies based on this relevance classification. When in doubt about the appropriate classification, default to the higher detail level category.
+
+9.  **Retain Substantive Detail (Overall):** Preserve the exhaustive substantive detail from the input segment summaries. Only omit information meeting strict redundancy criteria. The final output MUST be comprehensive, except where detail is intentionally reduced by the Variable Detail Level rules for "Pre-Accident Health". For all other sections, retain the maximum level of specific, non-redundant detail.
+
+10. **Emulate Target Style and Tone:**
+    *   **Tone:** Maintain an excruciatingly objective, formal, and professional legal tone. Report only factual substance. ZERO opinions, interpretations, analyses, judgments, assumptions, or subjective evaluations. Avoid judgmental adverbs/adjectives.
+    *   **Word Choice & Nuance:** Emulate the grammatical structure, sentence complexity, and objective-yet-specific word choices observed in the user-provided revised examples. Use precise verbs reflecting the nature of the testimony (e.g., "recounted," "asserted," "denied," "clarified," "acknowledged," "estimated," "believed"). Accurately reflect the deponent's degree of certainty using appropriate qualifiers ("believes," "may have," "approximately," "unsure if") based on the source segments. Use precise legal/medical terminology where appropriate and supported.
+    *   **Conciseness & Flow:** Actively eliminate redundant words and phrases. Minimize introductory phrases ("She stated that...") unless essential for clarity/emphasis. Combine related short sentences where it improves flow without over-complication. Ensure smooth, objective transitions (e.g., "Subsequently," "Regarding X," "Prior to the accident,") only when necessary for clarity. Avoid transitions implying causation or judgment.
+    *   **Paragraphing & Structure:** Structure information into logical paragraphs within each section, similar to the user's revised examples. Group closely related facts together tightly within paragraphs for logical flow. Start paragraphs with clear topic sentences where appropriate.
+    *   **Grammar & Voice:** Ensure all sentences are grammatically correct and clearly structured. Vary sentence structure appropriately while maintaining formality. Prefer active voice constructions unless passive voice is clearly more appropriate (actor unknown/unimportant, focus on object).
+        *   Avoid parenthetical: you should utilize commas rather than offsetting information in a parenthetical or dash “—".
+
+11. **Name Handling (Consistency Through Standardization):**
+    *   Determine the most likely correct/consistent version of names if variations exist.
+    *   **Deponent:** When referring to people, deponent, or corporations you should introduce them by using their full standardized name the first time they are mentioned or referenced. Ever subsequent mention or reference should simply refer to the person’s, deponent’s, or corporation’s last name or a clearly identifiable shortened name. (e.g. “John Smith” the first time and simply “Smith” for all other mentions, “Synergy Construction Services” the first time and simply “Synergy” for all other references).
+    *   Do not refer to the deponent or any identified party or witness as Mr., Mrs., Ms., or Miss. Any identified person should be identified once by their full name and referred to by their last name at all other points.
+
+12. **Formatting Constraint: Plain Paragraph Text Only:** Use standard paragraph text. ABSOLUTELY NO bullet points, em dashes, numbered lists, bolding (except mandated section/subheadings), italics, underlining, or other special formatting.
+
+13. **Handling Contradictions:** When segment summaries contain differing accounts, present both versions clearly using neutral transitions ("In another account," "Later stated,"). Do not attempt reconciliation.
+
+14. **Temporal Clarity:** Use explicit temporal markers (e.g., "before the 2023 accident," "two days after the collision," "currently," "in 2017") to clearly distinguish between pre-existing issues and those related to the subject accident.
+
+15. **Final Internal Check Mandate:** Before concluding, perform a final internal review comparing your generated summary against the input segments. Verify adherence to ALL instructions: detail retention, categorization, redundancy removal, style emulation (tone, conciseness, word choice, nuance), formatting, opening sentence, variable detail rules, contradiction handling, and temporal clarity. Adjust rigorously.
+
+# PLAINTIFF DEPOSITION OUTLINE:
+
+*(Start output directly with this heading, no text before it except the mandatory opening sentence(s))*
+
+### Personal:
+Remainder of personal details after the mandatory opening sentence (e.g., Marital status, family details, brief educational background).
+
+### Employment and Legal History:
+Current employment details (employer, title, duties, duration, pay if stated). Relevant past employment history (employers, titles, duties, dates/duration, reasons for leaving if stated). Relevant professional qualifications, licenses, or certifications. Mention lawsuits, claims (Workers' Comp, Disability, Unemployment), settlements, or administrative actions here. Group legal/financial items together logically (e.g., in a separate paragraph).
+
+### Other Accidents and Injuries:
+Accidents and/or Injuries that occurred before the subject accident and/or after the subject accident: Vehicle accidents, work-related accidents (describe event), falls, slips, trips, etc. Include dates, locations, brief description of the event.
+*   **Direct consequences:** Briefly note any immediate injury if directly tied to the incident description (e.g., "causing a hairline fracture").
+*   DO NOT list general medical history or surgeries here.
+
+### **Pre-Accident Health:**
+*(Include this bolded subheading)*
+Summarize general health status, prior diagnoses, ALL prior surgeries, relevant past treatments, pre-accident medications, and relevant provider history applying the Variable Detail Level rules based on relevance to the subject accident's claimed injuries.
+
+### The Accident:
+(Refers to the event that is the subject of the lawsuit)
+Detailed chronological account: Events leading up to, during, and immediately following the incident. Include date, time, location, weather, traffic, sequence of actions, statements made, vehicles involved, driver actions, impacts, immediate aftermath at the scene (police, EMT, other drivers' actions/statements as reported by Plaintiff).
+
+### **Accident-Related Injuries and Treatment:**
+*(Include this bolded subheading)*
+Clearly and specifically list any and all injuries or conditions to which the deponent attributes to the subject accident. Include the onset and description of symptoms resulting from the subject accident. Chronology of medical care after the subject accident. Describe the deponent’s condition when discharged from treatment, the last treatment date for any injury or condition attributed to the accident. Mention of stated future medical plans, prognosis if stated, or unresolved issues. Specify any appointments scheduled to treat or further evaluate any accident-related injury or condition, and/or any stated intentions to seek additional evaluation and/or treatment.
+
+### Damages:
+Summary of claimed damages based on testimony.
+*   **Economic Damages:** Mention of medical expenses, co-pays, insurance coverage notes, lost wages details, property damage to vehicle, inability to work in the future.
+*   **Non-Economic Damages:** Descriptions drawn from testimony regarding pain, suffering, limitations, sleep disturbance, emotional distress, impact on life.
+
+### Concluding Details:
+Summary of testimony about current condition, limitations, and ongoing impact related specifically to the subject accident. Specifically, but not limited to the deponent’s condition and ability to work, carry out normal household chores, normal self care routines, hobbies and activities, ability to care for others if relevant and stated, or any other areas of life which the deponent indicates has been impacted by the accident related injuries or conditions.
+
+# --- END PLAINTIFF OUTLINE & INSTRUCTIONS ---
+```

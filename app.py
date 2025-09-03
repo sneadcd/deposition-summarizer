@@ -383,10 +383,10 @@ def save_bytes_to_file(file_bytes, full_path):
 global_context_instructions = load_instruction(os.path.join(INSTRUCTIONS_DIR, "global_context_instructions.txt"))
 standard_instructions = load_instruction(os.path.join(INSTRUCTIONS_DIR, "standard_summary_instructions.txt"))
 role_files = {
-    "Plaintiff": os.path.join(INSTRUCTIONS_DIR, "plaintiff_outline.txt"),
-    "Defendant": os.path.join(INSTRUCTIONS_DIR, "defendant_outline.txt"),
-    "Expert Witness": os.path.join(INSTRUCTIONS_DIR, "expert_witness_outline.txt"),
-    "Fact Witness": os.path.join(INSTRUCTIONS_DIR, "fact_witness_outline.txt"),
+    "Plaintiff": os.path.join(INSTRUCTIONS_DIR, "plaintiff_outline.md"),
+    "Defendant": os.path.join(INSTRUCTIONS_DIR, "defendant_outline.md"),
+    "Expert Witness": os.path.join(INSTRUCTIONS_DIR, "expert_witness_outline.md"),
+    "Fact Witness": os.path.join(INSTRUCTIONS_DIR, "fact_witness_outline.md"),
 }
 
 st.sidebar.title("⚙️ Config & Status")
