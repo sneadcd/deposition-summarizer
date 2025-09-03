@@ -60,6 +60,7 @@ api_keys = {
     "Anthropic": os.getenv("ANTHROPIC_API_KEY"),
     "Google": os.getenv("GOOGLE_API_KEY"),
     "OpenRouter": os.getenv("OPENROUTER_API_KEY"),
+    "ChatLLM": os.getenv("CHATLLM_API_KEY"),
 }
 
 # --- Initialize LLM Clients ---
@@ -111,12 +112,30 @@ if api_keys["OpenRouter"]:
 else:
     client_load_status["OpenRouter"] = "⚠️ Key Missing"
 
+# ChatLLM (Abacus RouteLLM)
+if api_keys["ChatLLM"]:
+    try:
+        clients["ChatLLM"] = OpenAI(
+            base_url="https://routellm.abacus.ai/v1",
+            api_key=api_keys["ChatLLM"],
+        )
+        client_load_status["ChatLLM"] = "✅ Initialized"
+    except Exception as e:
+        client_load_status["ChatLLM"] = f"❌ Error: {e}"
+else:
+    client_load_status["ChatLLM"] = "⚠️ Key Missing"
+
 # --- Model Mapping ---
 MODEL_MAPPING = {
     "OpenAI": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
     "Anthropic": ["claude-3-5-sonnet-20240620", "claude-3-haiku-20240307", "claude-3-opus-20240229"],
     "Google": ["gemini-1.5-pro-latest", "gemini-1.5-flash-latest"],
-    "OpenRouter": ["Fetching..."]
+    "OpenRouter": ["Fetching..."],
+    "ChatLLM": [
+        "google/gemini-2.5-flash",
+        "anthropic/claude-4-sonnet",
+        "route-llm"
+    ]
 }
 OPENROUTER_MODELS_CACHE = None
 
@@ -161,7 +180,7 @@ def call_llm(prompt, provider, model_name):
     if model_name.startswith("Error:") or model_name == "Fetching...": return f"Error: Invalid model '{model_name}' selected."
 
     try:
-        if provider in ["OpenAI", "OpenRouter"]:
+        if provider in ["OpenAI", "OpenRouter", "ChatLLM"]:
             response = client.chat.completions.create(model=model_name, messages=[{"role": "user", "content": prompt}])
             return response.choices[0].message.content.strip()
 
@@ -379,16 +398,16 @@ if not available_providers:
 else:
     # --- LLM Selection ---
     st.sidebar.subheader("1. Context & Segment LLM")
-    default_provider_idx = available_providers.index("OpenRouter") if "OpenRouter" in available_providers else 0
+    default_provider_idx = available_providers.index("ChatLLM") if "ChatLLM" in available_providers else (available_providers.index("OpenRouter") if "OpenRouter" in available_providers else 0)
     selected_provider_context = st.sidebar.selectbox("Provider (Context)", available_providers, index=default_provider_idx, key="p1")
     models_context = fetch_openrouter_models(api_keys.get(selected_provider_context)) if selected_provider_context == "OpenRouter" else MODEL_MAPPING.get(selected_provider_context, [])
-    default_model_context = next((m for m in ["google/gemini-1.5-flash-latest", "claude-3-haiku-20240307", "gpt-4o-mini"] if m in models_context), models_context[0] if models_context else None)
+    default_model_context = next((m for m in ["google/gemini-2.5-flash", "google/gemini-1.5-flash-latest", "claude-3-haiku-20240307", "gpt-4o-mini"] if m in models_context), models_context[0] if models_context else None)
     selected_model_context = st.sidebar.selectbox("Model (Context)", models_context, index=models_context.index(default_model_context) if default_model_context else 0, key="m1")
 
     st.sidebar.subheader("2. Final Synthesis LLM")
     selected_provider_final = st.sidebar.selectbox("Provider (Final)", available_providers, index=default_provider_idx, key="p2")
     models_final = fetch_openrouter_models(api_keys.get(selected_provider_final)) if selected_provider_final == "OpenRouter" else MODEL_MAPPING.get(selected_provider_final, [])
-    default_model_final = next((m for m in ["anthropic/claude-3.5-sonnet", "openai/gpt-4o", "google/gemini-1.5-pro-latest"] if m in models_final), models_final[0] if models_final else None)
+    default_model_final = next((m for m in ["anthropic/claude-4-sonnet", "anthropic/claude-3.5-sonnet", "openai/gpt-4o", "google/gemini-1.5-pro-latest"] if m in models_final), models_final[0] if models_final else None)
     selected_model_final = st.sidebar.selectbox("Model (Final)", models_final, index=models_final.index(default_model_final) if default_model_final else 0, key="m2")
 
 # --- Status Displays ---
