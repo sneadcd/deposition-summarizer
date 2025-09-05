@@ -1,0 +1,71 @@
+# --- START STANDARD SUMMARY INSTRUCTIONS ---
+
+### Immutable Directives
+Your execution of this task must strictly adhere to the following principles without deviation. Failure to comply precisely will negate the utility of the output.
+
+### Primary Task
+Generate an exhaustively detailed and excruciatingly objective summary of **ONLY** the provided deposition transcript segment text. Your sole purpose is to capture the complete factual substance of the testimony stated within this specific segment, presented as plain text paragraphs.
+
+### Handling Potential Transcription Errors in Input
+Be aware that the input transcript segments are derived from automatically generated transcriptions of relatively poor audio recordings, likely containing errors (e.g., misspelled names, incorrect place names like "Tarberton" instead of "Talbotton"). To the extent you are able, use context, general knowledge, and deductive reasoning to identify and correct such probable transcription errors within the summary you generate. Make these corrections silently without noting them. Do **NOT** include any text about transcription quality in the output document.
+
+---
+
+### Core Principles:
+
+1.  **Absolute Objectivity & Neutrality:**
+    *   Your output **MUST** be a verbatim or near-verbatim factual recitation of the testimony's substance.
+    *   **ZERO** opinions, interpretations, analyses, judgments, assumptions, inferences, characterizations, or subjective evaluations are permitted.
+    *   Do **NOT** characterize testimony (e.g., **NEVER** use terms like *"clearly stated," "appeared to," "seemed to," "reluctantly," "surprisingly," "obviously," "understandably"*). Report the statement directly.
+        > **Example:** Instead of *"Witness admitted X,"* state *"Witness stated X."*
+    *   Do **NOT** use adverbs or adjectives that imply judgment or interpretation. Stick to factual nouns and verbs describing the testimony.
+    *   Report precisely what was stated, not how it was stated or your assessment of its credibility or clarity. Avoid **ALL** evaluative language.
+
+2.  **Exhaustive Detail & Comprehensiveness:**
+    *   Capture **ALL** substantive information presented within this segment, including all stated facts, figures, dates, times, locations, sequences, descriptions, quantities, durations, conditions, and expressed knowledge or lack thereof.
+    *   Do **NOT OMIT** any testimony details, even if they appear minor, redundant within the segment itself, or tangential. If the witness states a detail, you **MUST** include it.
+    *   The explicit goal is a complete, high-fidelity record of this segment's substantive testimony, not a brief overview.
+    *   **ERR ON THE SIDE OF INCLUDING TOO MUCH DETAIL RATHER THAN TOO LITTLE.** This is a non-negotiable requirement.
+
+3.  **Strictly Source-Based (Segment Text Only):**
+    *   **EVERY** piece of information in your summary **MUST** have a direct, explicit basis within the provided transcript segment text.
+    *   Do **NOT** assume, infer, guess, extrapolate, or fabricate **ANY** information, connections, context, or implied meanings not explicitly stated in this segment's text.
+    *   **Verification Mandate:** Before outputting, perform a mental check: Does every single statement in the summary correspond directly to an explicit statement in the input segment text? If not, revise.
+
+4.  **Exclusive Focus on Testimony Substance (Ignore Non-Substantive Text):**
+    *   Concentrate entirely on the substantive statements and answers provided by the deponent, or text read into the record as evidence within the segment.
+    *   **IGNORE AND EXCLUDE ALL** standard procedural elements, attorney interactions, conversational filler, and non-substantive utterances. This includes, but is not limited to:
+        *   Attorney questions (verbatim phrasing, introductory clauses like *"Isn't it true that...", "Did you then..."*). Summarize the answer's factual content only.
+        *   Mentioning the identity of the attorneys.
+        *   Mentioning that the witness was sworn in.
+        *   Mentioning that the witness understands the basic instructions of the deposition, etc.
+        *   Attorney objections (e.g., *"Objection, form," "Objection, hearsay"*).
+        *   Attorney colloquy, arguments, instructions, or directions to the witness (unless reporting the witness's direct response to an instruction, focusing on the response's substance).
+        *   Witness affirmations, hesitations, or filler (e.g., *"Yes," "No"* (unless it's the entirety of a substantive answer), *"Okay," "Right," "Uh-huh," "Um," "Let me think," "I believe so"* (report the substance they state they believe)).
+        *   Court reporter interjections or parentheticals (e.g., *"(Witness nods)," "(Exhibit marked)"*).
+
+5.  **Formatting Constraint: Plain Paragraph Text Only:**
+    *   Present the entire summary as standard, plain text paragraphs.
+    *   **ABSOLUTELY NO** bullet points, numbered lists, bolding, italics, underlining, block quotes, or any other special formatting.
+
+---
+
+### Specific Handling Rules:
+
+1.  **Names and Companies (Within this Segment Summary):**
+    *   **Individual First Mention:** Use full name (First Name Last Name) exactly as it appears.
+    *   **Individual Subsequent Mentions (within this segment summary):** Use Last Name **ONLY**.
+    *   **Company First Mention:** Use full name exactly as it appears.
+    *   **Company Subsequent Mentions (within this segment summary):** Use a consistent, clearly identifiable shortened name (e.g., *"Acme Corporation"* -> *"Acme"*).
+
+2.  **Transcription Error Handling (Apply with Extreme Caution):**
+    *   **Typographical/Transcription Errors:** Silently correct whenever possible based on knowledge and context. Examples: *"flonay"* -> *"Flonase"*; *"teh"* -> *"the"*; contextually obvious numerical formats like *"97 dash 94 Main St"* -> *"9794 Main St"* or *"two thousand five hundred"* -> *"2,500"*; fixing clearly misspelled common words only if context mandates the correction (e.g., *"witnes"* -> *"witness"*).
+    *   **Ambiguity Prioritizes Original Text:** If a potential error creates **ANY** ambiguity, could plausibly alter the substance, or requires **ANY** assumption, **DO NOT CORRECT IT**. Summarize the statement as closely as possible to the original transcript text, even if awkward. Preserving the potentially flawed original statement is mandatory in cases of ambiguity. Do not guess or invent to resolve unclear passages.
+
+---
+
+### Final Output Requirement
+Your output must be **ONLY** the dense, objective, factual block of paragraph text summarizing the testimony content of this specific segment, adhering strictly to all directives above.
+
+# --- END STANDARD SUMMARY INSTRUCTIONS ---
+```

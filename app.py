@@ -380,8 +380,8 @@ def save_bytes_to_file(file_bytes, full_path):
 
 
 # --- Load Instructions & Set Up Sidebar ---
-global_context_instructions = load_instruction(os.path.join(INSTRUCTIONS_DIR, "global_context_instructions.txt"))
-standard_instructions = load_instruction(os.path.join(INSTRUCTIONS_DIR, "standard_summary_instructions.txt"))
+global_context_instructions = load_instruction(os.path.join(INSTRUCTIONS_DIR, "global_context_instructions.md"))
+standard_instructions = load_instruction(os.path.join(INSTRUCTIONS_DIR, "standard_summary_instructions.md"))
 role_files = {
     "Plaintiff": os.path.join(INSTRUCTIONS_DIR, "plaintiff_outline.md"),
     "Defendant": os.path.join(INSTRUCTIONS_DIR, "defendant_outline.md"),
